@@ -1,0 +1,327 @@
+E-Commerce Sales Application Documentation
+1. Project Overview
+Project Name
+Sacy Shoes E-Commerce Platform
+Purpose
+An online sales platform that allows customers to browse products, add items to a cart, pay online using Mobile Money and other payment methods through Paystack, track orders, and manage their accounts.
+The system will also provide an administrative dashboard for managing products, orders, customers, payments, and reports.
+ 
+2. Technology Stack
+Backend
+•	Laravel 12 
+•	PHP 8.3+ 
+•	MySQL 8 
+Frontend
+•	Laravel Blade 
+•	Tailwind CSS 
+•	Alpine.js 
+Payment Gateway
+•	Paystack 
+Hosting
+•	cPanel Hosting (initially) 
+•	VPS (future scaling) 
+________________________________________
+3. User Roles
+Customer
+Can:
+•	Register 
+•	Login 
+•	Browse products 
+•	Add products to cart 
+•	Checkout 
+•	Pay online 
+•	Track orders 
+•	View order history 
+•	Update profile 
+________________________________________
+Administrator
+Can:
+•	Access dashboard 
+•	Manage products 
+•	Manage categories 
+•	Manage customers 
+•	Manage orders 
+•	View payments 
+•	Update order status 
+•	Generate reports 
+________________________________________
+4. Modules
+Authentication Module
+Features
+Customer Registration
+Fields:
+First Name
+Last Name
+Email
+Phone Number
+Password
+Confirm Password
+Login
+Email
+Password
+Password Reset
+Forgot Password
+Email Verification
+________________________________________
+5. Product Management Module
+Product Fields
+Product Name
+SKU
+Category
+Price
+Discount Price
+Description
+Quantity
+Images
+Status
+Created Date
+Product Images
+Support:
+JPG
+PNG
+WEBP
+Multiple images per product.
+________________________________________
+6. Category Management
+Category Fields
+Category Name
+Description
+Status
+Image
+Examples:
+Electronics
+Fashion
+Footwear
+Accessories
+________________________________________
+7. Shopping Cart Module
+Customer Actions
+Add To Cart
+Product
+Quantity
+Price
+Update Quantity
+Remove Item
+Clear Cart
+View Cart Total
+________________________________________
+8. Checkout Module
+Billing Information
+Full Name
+Phone Number
+Email
+Address
+City
+Country
+Order Summary
+Products
+Quantity
+Subtotal
+Delivery Fee
+Tax
+Grand Total
+________________________________________
+9. Payment Module
+Paystack Integration
+Supported Payments
+Mobile Money
+Visa
+MasterCard
+Bank Transfer
+Payment Flow
+Customer Checkout
+        ↓
+Paystack Payment
+        ↓
+Paystack Verification
+        ↓
+Payment Confirmed
+        ↓
+Create Order
+        ↓
+Send Receipt
+Webhook Events
+charge.success
+payment.success
+Laravel verifies every transaction before marking as paid.
+________________________________________
+10. Order Management
+Order Fields
+Order Number
+Customer
+Amount
+Payment Method
+Payment Status
+Order Status
+Date
+________________________________________
+Order Statuses
+Pending Payment
+Paid
+Processing
+Ready For Delivery
+Shipped
+Delivered
+Cancelled
+Refunded
+________________________________________
+11. Order Tracking
+Customers can view:
+Order Number
+Order Date
+Current Status
+Tracking Updates
+Example:
+Order Created
+Payment Received
+Processing
+Shipped
+Delivered
+________________________________________
+12. Customer Dashboard
+Dashboard Widgets
+Orders Count
+Total Orders
+Pending Orders
+Completed Orders
+Recent Orders
+Order Number
+Date
+Status
+Amount
+Profile Management
+Name
+Phone
+Address
+Password
+________________________________________
+13. Admin Dashboard
+Statistics Cards
+Total Sales
+Today's Sales
+Total Orders
+Products
+Customers
+Revenue
+Charts
+Sales Overview
+Daily Sales
+Weekly Sales
+Monthly Sales
+Top Selling Products
+Revenue Trends
+________________________________________
+14. Product Inventory
+Stock Management
+Current Stock
+Stock Added
+Stock Removed
+Low Stock Alert
+Low Stock Notification
+Example:
+Product Quantity < 10
+Admin receives alert.
+________________________________________
+15. Sales Reports
+Daily Sales
+Total Sales
+Transactions
+Revenue
+Monthly Sales
+Revenue
+Orders
+Growth
+Export Options
+Excel
+CSV
+PDF
+________________________________________
+16. Customer Management
+Admin can view:
+Customer Name
+Email
+Phone
+Orders
+Total Purchases
+Admin can:
+Activate Account
+Deactivate Account
+________________________________________
+17. Notification System
+Email Notifications
+Registration
+Welcome Email
+Order Notifications
+Order Created
+Payment Received
+Order Shipped
+Order Delivered
+________________________________________
+18. Search Module
+Customer can search:
+Product Name
+SKU
+Category
+Filters:
+Price
+Category
+Availability
+ 
+19. Security
+Authentication
+Laravel Authentication
+Authorization
+Role-based access
+Admin
+Customer
+Security Features
+CSRF Protection
+Password Hashing
+Email Verification
+Rate Limiting
+Input Validation
+ 
+20. Database Tables
+users
+products
+categories
+product_images
+carts
+cart_items
+orders
+order_items
+payments
+transactions
+addresses
+notifications
+password_reset_tokens
+ 
+21. Future Enhancements
+Phase 2:
+•	Discount Coupons 
+•	Promotional Campaigns 
+•	Wishlist 
+•	Reviews & Ratings 
+•	SMS Notifications 
+•	WhatsApp Notifications 
+•	Delivery Partner Integration 
+Phase 3:
+•	Mobile App (Flutter) 
+•	Vendor Marketplace 
+•	Loyalty Points 
+•	Multi-Warehouse Inventory 
+ 
+Recommended Development Order
+1.	Authentication 
+2.	Product Management 
+3.	Categories 
+4.	Cart 
+5.	Checkout 
+6.	Paystack Integration 
+7.	Orders 
+8.	Customer Dashboard 
+9.	Admin Dashboard 
+10.	Reports 
+11.	Notifications 
+12.	Deployment
+
