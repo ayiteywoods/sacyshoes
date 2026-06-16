@@ -12,7 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
+            'cart.not_empty' => \App\Http\Middleware\EnsureCartNotEmpty::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'paystack/webhook',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
