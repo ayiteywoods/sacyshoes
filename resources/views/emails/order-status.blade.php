@@ -1,20 +1,13 @@
+@php
+    $replacements = \App\Support\EmailReplacements::forOrderStatus($order);
+@endphp
+
 <x-mail::message>
-# Order Update
+{!! app(\App\Services\EmailTemplateService::class)->renderBodyHtml(\App\Models\EmailTemplate::SLUG_ORDER_STATUS, $replacements) !!}
 
-Hi {{ $order->billing_full_name }},
+@include('emails.partials.order-summary', ['order' => $order])
 
-Your order **{{ $order->order_number }}** is now **{{ $order->status->label() }}**.
-
-@if ($order->status->value === 'shipped')
-Your package is on its way.
-@elseif ($order->status->value === 'delivered')
-We hope you enjoy your purchase.
-@endif
-
-<x-mail::button :url="route('account.orders.show', $order)">
-View Order
+<x-mail::button :url="\App\Support\OrderMailUrls::viewOrder($order)">
+View Order Tracking
 </x-mail::button>
-
-Thanks,<br>
-{{ config('app.name') }}
 </x-mail::message>

@@ -12,19 +12,19 @@
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
         <div>
-            <label for="email" class="block text-sm font-medium">Email</label>
+            <x-form-label for="email" :required="true">Email</x-form-label>
             <input id="email" type="email" name="email" value="{{ old('email', $request->email) }}" required autofocus class="input-field">
             @error('email')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-medium">New password</label>
+            <x-form-label for="password" :required="true">New password</x-form-label>
             <input id="password" type="password" name="password" required class="input-field">
             @error('password')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>
 
         <div>
-            <label for="password_confirmation" class="block text-sm font-medium">Confirm password</label>
+            <x-form-label for="password_confirmation" :required="true">Confirm password</x-form-label>
             <input id="password_confirmation" type="password" name="password_confirmation" required class="input-field">
         </div>
 

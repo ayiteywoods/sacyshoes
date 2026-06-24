@@ -11,37 +11,37 @@
 
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
-                <label for="first_name" class="block text-sm font-medium">First name</label>
+                <x-form-label for="first_name" :required="true">First name</x-form-label>
                 <input id="first_name" type="text" name="first_name" value="{{ old('first_name') }}" required class="input-field">
                 @error('first_name')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
             </div>
             <div>
-                <label for="last_name" class="block text-sm font-medium">Last name</label>
+                <x-form-label for="last_name" :required="true">Last name</x-form-label>
                 <input id="last_name" type="text" name="last_name" value="{{ old('last_name') }}" required class="input-field">
                 @error('last_name')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
             </div>
         </div>
 
         <div>
-            <label for="email" class="block text-sm font-medium">Email</label>
+            <x-form-label for="email" :required="true">Email</x-form-label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required class="input-field">
             @error('email')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>
 
         <div>
-            <label for="phone" class="block text-sm font-medium">Phone number</label>
+            <x-form-label for="phone" :required="true">Phone number</x-form-label>
             <input id="phone" type="text" name="phone" value="{{ old('phone') }}" required class="input-field">
             @error('phone')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-medium">Password</label>
+            <x-form-label for="password" :required="true">Password</x-form-label>
             <input id="password" type="password" name="password" required class="input-field">
             @error('password')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>
 
         <div>
-            <label for="password_confirmation" class="block text-sm font-medium">Confirm password</label>
+            <x-form-label for="password_confirmation" :required="true">Confirm password</x-form-label>
             <input id="password_confirmation" type="password" name="password_confirmation" required class="input-field">
         </div>
 

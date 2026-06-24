@@ -4,19 +4,21 @@
 
 @section('content')
     <h1 class="page-heading">Sign in</h1>
-    <p class="mt-1 text-sm text-brand-muted">Access your account or admin dashboard.</p>
+    <p class="mt-1 text-sm text-brand-muted">Access your account and track your order progress.</p>
+
+    <x-order-tracking-notice compact class="mt-5" />
 
     <form method="POST" action="{{ route('login') }}" class="mt-6 space-y-4">
         @csrf
 
         <div>
-            <label for="email" class="block text-sm font-medium">Email</label>
+            <x-form-label for="email" :required="true">Email</x-form-label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus class="input-field">
             @error('email')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-medium">Password</label>
+            <x-form-label for="password" :required="true">Password</x-form-label>
             <input id="password" type="password" name="password" required class="input-field">
             @error('password')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>

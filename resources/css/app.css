@@ -17,7 +17,14 @@
     --color-brand-muted: #737373;
     --color-brand-light: #f5f5f5;
     --color-brand-cream: #faf9f7;
+    --color-brand-purple: #7c3aed;
+    --color-brand-purple-dark: #5b21b6;
+    --color-brand-purple-deep: #4c1d95;
+    --color-brand-purple-light: #c4b5fd;
+    --color-brand-footer: #0a0a0a;
 }
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @layer components {
     .btn-primary {
@@ -37,6 +44,38 @@
 
     .nav-link {
         @apply text-xs font-normal uppercase tracking-wide transition hover:text-brand-red;
+    }
+
+    .mobile-nav-panel {
+        @apply border-t border-neutral-200 bg-brand-white px-4 py-4 sm:hidden;
+    }
+
+    .mobile-nav-list {
+        @apply flex flex-col;
+    }
+
+    .mobile-nav-link {
+        @apply flex items-center justify-between border-b border-l-2 border-neutral-100 border-l-transparent py-3.5 pl-3 text-sm font-medium uppercase tracking-[0.12em] text-brand-black transition last:border-b-0;
+    }
+
+    .mobile-nav-link:hover {
+        @apply text-brand-red;
+    }
+
+    .mobile-nav-link-active {
+        @apply border-l-brand-red text-brand-red;
+    }
+
+    .mobile-nav-link-icon {
+        @apply h-4 w-4 shrink-0 text-neutral-300 transition group-hover:text-brand-red;
+    }
+
+    .mobile-nav-auth {
+        @apply mt-4 border-t border-neutral-200 pt-4;
+    }
+
+    .mobile-nav-auth-link {
+        @apply flex items-center justify-center py-3 text-sm font-medium uppercase tracking-[0.12em] text-brand-black transition hover:text-brand-red;
     }
 
     .dropdown-menu {
@@ -281,6 +320,59 @@
         @apply border-brand-red bg-brand-red text-white hover:bg-brand-red hover:text-white;
     }
 
+    .policy-content {
+        @apply text-brand-black;
+    }
+
+    .policy-content > :first-child {
+        margin-top: 0;
+    }
+
+    .policy-content > p:first-of-type {
+        @apply text-base leading-8 text-brand-muted sm:text-lg;
+    }
+
+    .policy-content h2 {
+        @apply mt-12 mb-4 scroll-mt-28 border-b border-neutral-200 pb-3 text-lg font-semibold uppercase tracking-wide text-brand-black sm:text-xl;
+    }
+
+    .policy-content h2:first-child {
+        @apply mt-0;
+    }
+
+    .policy-content h3 {
+        @apply mt-8 mb-3 text-sm font-semibold uppercase tracking-wider text-brand-red;
+    }
+
+    .policy-content p {
+        @apply mb-4 text-sm leading-7 text-neutral-700 sm:text-base sm:leading-8;
+    }
+
+    .policy-content ul {
+        @apply mb-6 list-none space-y-3 pl-0;
+    }
+
+    .policy-content ul > li {
+        @apply relative pl-6 text-sm leading-7 text-neutral-700 sm:text-base sm:leading-8;
+    }
+
+    .policy-content ul > li::before {
+        content: '';
+        @apply absolute top-[0.7em] left-0 h-1.5 w-1.5 rounded-full bg-brand-red;
+    }
+
+    .policy-content strong {
+        @apply font-semibold text-brand-black;
+    }
+
+    .policy-content a {
+        @apply font-medium text-brand-red transition hover:underline;
+    }
+
+    .policy-content > p + ul {
+        @apply -mt-1;
+    }
+
     .admin-quick-action {
         @apply flex items-center gap-3 rounded-none border border-neutral-200 bg-white p-4 text-sm font-medium transition hover:border-brand-red hover:bg-brand-light;
     }
@@ -346,12 +438,48 @@
     }
 
     .hero-display-title {
-        @apply font-serif text-4xl font-bold uppercase leading-[1.1] tracking-tight text-brand-black sm:text-5xl lg:text-[3.25rem] xl:text-5xl;
+        @apply font-serif text-4xl font-bold leading-[1.1] tracking-tight text-brand-black sm:text-5xl lg:text-[3.25rem] xl:text-5xl;
+    }
+
+    .hero-display-title-on-image {
+        @apply text-white;
+    }
+
+    .hero-section {
+        @apply relative flex min-h-[62dvh] items-center justify-center bg-brand-black bg-cover bg-center px-6 py-8 text-center sm:min-h-[125dvh] sm:px-10 sm:py-16;
+    }
+
+    .hero-section-overlay {
+        @apply bg-black/20;
+    }
+
+    .hero-btn-outline {
+        @apply inline-flex items-center justify-center rounded-none border border-white bg-transparent px-5 py-2.5 text-xs font-normal uppercase tracking-wide text-white transition hover:bg-white hover:text-brand-black;
+    }
+
+    .color-swatch {
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
     }
 
     .btn-outline-red {
         @apply inline-flex items-center justify-center rounded-none border border-brand-red bg-brand-white px-5 py-2.5 text-xs font-normal tracking-wide text-brand-red transition hover:bg-brand-red hover:text-white;
         text-transform: uppercase;
+    }
+
+    .checkout-payment-badge {
+        @apply inline-flex h-6 min-w-6 items-center justify-center rounded border border-neutral-200 bg-white px-1.5;
+    }
+
+    .checkout-payment-badge-visa {
+        @apply border-[#1a1f71] bg-[#1a1f71] px-2;
+    }
+
+    .checkout-payment-badge-momo {
+        @apply border-[#ffcb05] bg-[#ffcb05];
+    }
+
+    .checkout-payment-badge-more {
+        @apply px-2 text-[10px] font-medium text-brand-muted;
     }
 
     .category-card {
@@ -379,8 +507,8 @@
         @apply absolute right-0 bottom-0 left-0 z-10 flex w-full items-center justify-center border border-brand-red bg-brand-red px-4 py-2.5 text-xs font-normal uppercase tracking-wide text-white;
     }
 
-    .category-card-scroll {
-        @apply min-h-80 w-64 shrink-0 lg:min-h-96 lg:w-[calc((100%-3rem)/4)];
+    .category-card-grid {
+        @apply min-h-64 w-full sm:min-h-80 lg:min-h-96;
     }
 
     .category-scroll {
@@ -407,6 +535,10 @@
         @apply absolute left-3 top-3 z-10 rounded-none bg-brand-red px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white;
     }
 
+    .sold-out-badge {
+        @apply absolute left-3 top-3 z-10 rounded-none bg-brand-black px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white;
+    }
+
     .ticker-bar {
         @apply min-h-8 overflow-hidden bg-brand-red-light py-2.5 sm:min-h-9 sm:py-3;
     }
@@ -430,6 +562,62 @@
 
     .ticker-separator {
         @apply mx-3 text-[9px] text-white/50;
+    }
+
+    .track-order-banner-btn {
+        @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-none border border-white bg-white px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-brand-red transition hover:bg-white/90;
+    }
+
+    .product-action-btn {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white/95 text-brand-black shadow-sm backdrop-blur-sm transition hover:border-brand-red hover:text-brand-red;
+    }
+
+    .product-action-btn-active {
+        @apply border-brand-red bg-brand-red text-white hover:bg-brand-red hover:text-white;
+    }
+
+    .product-action-btn-labeled {
+        @apply h-9 w-auto min-w-9 gap-2 rounded-full px-4 text-xs font-medium uppercase tracking-wide;
+    }
+
+    .footer-social-link {
+        @apply inline-flex h-10 w-10 items-center justify-center border border-neutral-700 text-neutral-300 transition hover:border-brand-red hover:text-brand-red;
+    }
+
+    .shop-hero-glow {
+        @apply pointer-events-none absolute rounded-full blur-3xl;
+    }
+
+    .shop-hero-glow-left {
+        @apply -left-16 top-0 h-56 w-56 bg-brand-red/30;
+    }
+
+    .shop-hero-glow-right {
+        @apply -right-10 bottom-0 h-48 w-48 bg-brand-red/20;
+    }
+
+    .shop-hero-icon {
+        @apply flex h-8 w-8 items-center justify-center rounded-full border border-brand-red/40 bg-brand-red/15 text-brand-red;
+    }
+
+    .shop-hero-stat {
+        @apply flex min-w-0 items-center gap-3 overflow-hidden border border-white/10 bg-white/5 px-4 py-3.5 backdrop-blur-sm;
+    }
+
+    .shop-hero-stat-icon {
+        @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full;
+    }
+
+    .shop-hero-stat-icon-red {
+        @apply bg-brand-red text-white;
+    }
+
+    .shop-hero-stat-icon-white {
+        @apply border border-white/20 bg-white/10 text-white;
+    }
+
+    .shop-hero-chip {
+        @apply inline-flex items-center gap-1.5 border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-white transition hover:border-brand-red hover:bg-brand-red/20;
     }
 }
 
@@ -489,4 +677,324 @@
     .footer-payment-badge {
         @apply inline-flex h-6 min-w-[2.75rem] items-center justify-center rounded px-2 text-[9px] font-bold uppercase leading-none tracking-wide;
     }
+
+    .product-gallery-main {
+        position: relative;
+        display: block;
+        width: 100%;
+        max-width: 36rem;
+        margin-inline: auto;
+        overflow: hidden;
+        cursor: pointer;
+        border: 1px solid var(--color-neutral-200);
+        background-color: var(--color-neutral-100);
+    }
+
+    .product-gallery-main::before {
+        content: '';
+        display: block;
+        padding-top: 100%;
+    }
+
+    .product-gallery-main-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        transition: transform 300ms;
+    }
+
+    .product-gallery-main:hover .product-gallery-main-image {
+        transform: scale(1.02);
+    }
+
+    .product-gallery-main-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgb(0 0 0 / 0);
+        transition: background-color 300ms;
+        pointer-events: none;
+    }
+
+    .product-gallery-main:hover .product-gallery-main-overlay {
+        background-color: rgb(0 0 0 / 0.1);
+    }
+
+    .product-gallery-main-overlay span {
+        opacity: 0;
+        transition: opacity 300ms;
+    }
+
+    .product-gallery-main:hover .product-gallery-main-overlay span {
+        opacity: 1;
+    }
+
+    .product-gallery-thumb {
+        @apply relative h-20 w-20 shrink-0 overflow-hidden border-2 border-transparent bg-neutral-100 transition;
+    }
+
+    .product-gallery-thumb-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .product-gallery-thumb-active {
+        @apply border-brand-red ring-2 ring-brand-red/20;
+    }
+
+    .product-gallery-lightbox {
+        @apply fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4;
+    }
+
+    .product-gallery-lightbox-close {
+        @apply absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 sm:right-6 sm:top-6;
+    }
+
+    .product-gallery-lightbox-nav {
+        @apply absolute top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20;
+    }
+
+    .product-gallery-lightbox-prev {
+        @apply left-4 sm:left-6;
+    }
+
+    .product-gallery-lightbox-next {
+        @apply right-4 sm:right-6;
+    }
+
+    .product-detail-layout {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+        .product-detail-layout {
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            align-items: start;
+            gap: 2rem;
+        }
+
+        .product-detail-purchase {
+            position: sticky;
+            top: 7rem;
+        }
+    }
+
+    .product-detail-gallery .product-gallery-main {
+        border: 0;
+    }
+
+    .theme-toggle {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-none border border-transparent text-brand-black transition hover:border-brand-red hover:text-brand-red;
+    }
+
+    .site-footer {
+        @apply border-t border-neutral-800 bg-brand-footer text-white;
+    }
+}
+
+.dark {
+    color-scheme: dark;
+    --color-brand-red: #a78bfa;
+    --color-brand-red-dark: #8b5cf6;
+    --color-brand-red-light: #c4b5fd;
+    --color-brand-black: #faf5ff;
+    --color-brand-white: #1a1028;
+    --color-brand-muted: #c4b5fd;
+    --color-brand-light: #241636;
+    --color-brand-cream: #110818;
+    --color-brand-footer: #5b21b6;
+}
+
+.dark .btn-primary {
+    @apply bg-brand-purple hover:bg-brand-purple-dark;
+}
+
+.dark .btn-outline {
+    @apply border-brand-purple-light text-brand-black hover:bg-brand-purple hover:text-white;
+}
+
+.dark .btn-dark {
+    @apply bg-brand-purple-dark hover:bg-brand-purple;
+}
+
+.dark .nav-link {
+    @apply text-brand-black hover:text-brand-purple-light;
+}
+
+.dark .mobile-nav-panel {
+    @apply border-purple-900/50 bg-brand-white;
+}
+
+.dark .mobile-nav-link {
+    @apply border-purple-900/30 text-brand-black;
+}
+
+.dark .mobile-nav-link:hover,
+.dark .mobile-nav-link-active {
+    @apply text-brand-purple-light;
+}
+
+.dark .mobile-nav-link-active {
+    @apply border-l-brand-purple-light text-brand-purple-light;
+}
+
+.dark .mobile-nav-link-icon {
+    @apply text-brand-muted;
+}
+
+.dark .mobile-nav-auth {
+    @apply border-purple-900/50;
+}
+
+.dark .mobile-nav-auth-link {
+    @apply text-brand-black hover:text-brand-purple-light;
+}
+
+.dark .theme-toggle {
+    @apply text-brand-black hover:border-brand-purple-light hover:text-brand-purple-light;
+}
+
+.dark .card {
+    @apply border-purple-900/40 bg-brand-white text-brand-black;
+}
+
+.dark .input-field {
+    @apply border-purple-900/50 bg-brand-light text-brand-black placeholder:text-brand-muted;
+}
+
+.dark .dropdown-menu,
+.dark .admin-notifications-menu {
+    @apply border-purple-900/50 bg-brand-white;
+}
+
+.dark .dropdown-item {
+    @apply text-brand-black hover:bg-brand-light hover:text-brand-purple-light;
+}
+
+.dark .admin-action-btn,
+.dark .notification-action-btn {
+    @apply border-purple-900/50 bg-brand-white text-brand-black hover:border-brand-purple-light hover:text-brand-purple-light;
+}
+
+.dark .admin-detail-panel {
+    @apply border-purple-900/50 bg-brand-white;
+}
+
+.dark .admin-detail-toolbar,
+.dark .admin-detail-body {
+    @apply border-purple-900/40;
+}
+
+.dark .admin-sidebar {
+    @apply border-purple-900 bg-brand-purple-deep;
+}
+
+.dark .admin-sidebar-link-active {
+    @apply bg-brand-purple text-white;
+}
+
+.dark .admin-sidebar-link {
+    @apply text-purple-100 hover:bg-brand-purple hover:text-white;
+}
+
+.dark .admin-col-actions {
+    @apply bg-brand-white shadow-[-6px_0_10px_-8px_rgba(76,29,149,0.45)];
+}
+
+.dark .admin-data-table thead .admin-col-actions {
+    @apply bg-brand-light;
+}
+
+.dark .admin-data-table tbody tr:hover .admin-col-actions {
+    @apply bg-brand-light;
+}
+
+.dark .account-nav {
+    @apply border-purple-900/40 bg-brand-white;
+}
+
+.dark .account-nav-link-active {
+    @apply bg-brand-purple;
+}
+
+.dark .account-nav-link-inactive {
+    @apply text-brand-black hover:bg-brand-light;
+}
+
+.dark .site-footer {
+    @apply border-purple-900 bg-brand-footer;
+}
+
+.dark .hero-btn-outline {
+    @apply border-brand-purple-light text-white hover:bg-brand-purple-light hover:text-brand-purple-deep;
+}
+
+.dark .hero-section-overlay {
+    @apply bg-brand-purple-deep/35;
+}
+
+.dark .admin-period-pill {
+    @apply border-purple-700/60 bg-brand-light text-purple-100 hover:border-brand-purple-light hover:bg-brand-purple/70 hover:text-white;
+}
+
+.dark .admin-period-pill.admin-period-pill-active {
+    @apply border-brand-purple-light bg-brand-purple text-white shadow-[0_0_0_1px_rgba(167,139,250,0.35)] hover:border-brand-purple-light hover:bg-brand-purple-dark hover:text-white;
+}
+
+.dark .admin-attention-grid {
+    @apply bg-purple-900/60;
+}
+
+.dark .admin-attention-item {
+    @apply bg-brand-light text-purple-100 hover:bg-brand-purple/25;
+}
+
+.dark .admin-attention-item .text-amber-700 {
+    @apply text-amber-400;
+}
+
+.dark .admin-attention-item .text-blue-700 {
+    @apply text-blue-400;
+}
+
+.dark .admin-attention-item .text-red-700 {
+    @apply text-red-400;
+}
+
+.dark .admin-quick-action {
+    @apply border-purple-900/40 bg-brand-white text-brand-black hover:border-brand-purple-light hover:text-brand-purple-light;
+}
+
+.dark .shop-hero {
+    @apply border-purple-900/50 bg-brand-purple-deep;
+}
+
+.dark .ticker-bar {
+    @apply bg-brand-purple;
+}
+
+.dark .product-action-btn {
+    @apply border-purple-900/40 bg-white/95 text-neutral-900 hover:border-brand-purple hover:text-brand-purple-dark;
+}
+
+.dark .product-action-btn-active {
+    @apply border-brand-purple bg-brand-purple text-white hover:border-brand-purple hover:bg-brand-purple-dark hover:text-white;
+}
+
+.dark .checkout-payment-badge-visa {
+    @apply border-brand-purple-dark bg-brand-purple-dark;
+}
+
+.dark .checkout-payment-badge-momo {
+    @apply border-yellow-400 bg-yellow-400;
 }

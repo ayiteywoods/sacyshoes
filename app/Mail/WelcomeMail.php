@@ -2,14 +2,18 @@
 
 namespace App\Mail;
 
+use App\Models\EmailTemplate;
 use App\Models\User;
+use App\Services\EmailTemplateService;
+use App\Support\EmailReplacements;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class WelcomeMail extends Mailable
+class WelcomeMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -17,8 +21,10 @@ class WelcomeMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $templates = app(EmailTemplateService::class);
+
         return new Envelope(
-            subject: 'Welcome to SACYSHOES',
+            subject: $templates->subject(EmailTemplate::SLUG_WELCOME, EmailReplacements::forUser($this->user)),
         );
     }
 

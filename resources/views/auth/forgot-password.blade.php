@@ -16,7 +16,7 @@
         @csrf
 
         <div>
-            <label for="email" class="block text-sm font-medium">Email</label>
+            <x-form-label for="email" :required="true">Email</x-form-label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus class="input-field">
             @error('email')<p class="mt-1 text-sm text-brand-red">{{ $message }}</p>@enderror
         </div>

@@ -24,7 +24,7 @@ class DetailController extends Controller
 
     public function category(Category $category): JsonResponse
     {
-        $category->loadCount('products');
+        $category->load(['parent', 'children'])->loadCount(['products', 'children']);
 
         return response()->json([
             'title' => $category->name,

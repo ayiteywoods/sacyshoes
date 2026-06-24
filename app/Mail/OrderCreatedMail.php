@@ -2,14 +2,18 @@
 
 namespace App\Mail;
 
+use App\Models\EmailTemplate;
 use App\Models\Order;
+use App\Services\EmailTemplateService;
+use App\Support\EmailReplacements;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OrderCreatedMail extends Mailable
+class OrderCreatedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -17,8 +21,10 @@ class OrderCreatedMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $templates = app(EmailTemplateService::class);
+
         return new Envelope(
-            subject: 'Order '.$this->order->order_number.' received',
+            subject: $templates->subject(EmailTemplate::SLUG_ORDER_CREATED, EmailReplacements::forOrder($this->order)),
         );
     }
 

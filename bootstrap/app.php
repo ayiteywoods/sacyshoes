@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminPermission;
+use App\Http\Middleware\EnsureCartNotEmpty;
+use App\Http\Middleware\EnsureStorefrontNotInMaintenance;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,10 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-            'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
-            'cart.not_empty' => \App\Http\Middleware\EnsureCartNotEmpty::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'admin.permission' => EnsureAdminPermission::class,
+            'cart.not_empty' => EnsureCartNotEmpty::class,
+            'storefront.maintenance' => EnsureStorefrontNotInMaintenance::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

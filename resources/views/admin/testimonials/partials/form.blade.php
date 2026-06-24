@@ -1,13 +1,13 @@
 @php($testimonial = $testimonial ?? null)
 
 <div>
-    <label class="block text-sm font-medium">Quote</label>
+    <x-form-label :required="true">Quote</x-form-label>
     <textarea name="quote" rows="4" required class="input-field">{{ old('quote', $testimonial?->quote) }}</textarea>
     @error('quote')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
 </div>
 
 <div>
-    <label class="block text-sm font-medium">Customer name</label>
+    <x-form-label :required="true">Customer name</x-form-label>
     <input type="text" name="author_name" value="{{ old('author_name', $testimonial?->author_name) }}" required class="input-field">
     @error('author_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
 </div>

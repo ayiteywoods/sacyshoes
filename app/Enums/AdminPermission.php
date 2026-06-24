@@ -36,7 +36,7 @@ enum AdminPermission: string
             self::Orders => 'View and update orders',
             self::Customers => 'View and manage customer accounts',
             self::Users => 'Create and manage admin users and permissions',
-            self::Content => 'Edit homepage sections, testimonials, and legal pages',
+            self::Content => 'Edit homepage sections, store settings, testimonials, and legal pages',
             self::Reports => 'View and export sales reports',
         };
     }

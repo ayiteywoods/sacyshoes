@@ -30,10 +30,10 @@ class DatabaseSeeder extends Seeder
         );
 
         $categories = [
-            ['name' => 'Sneakers', 'description' => 'Casual and sporty sneakers for everyday wear.', 'image' => 'images/brand/sneakers.jpg'],
-            ['name' => 'Formal', 'description' => 'Elegant formal shoes for office and events.', 'image' => 'images/brand/shoes.jpg'],
-            ['name' => 'Sandals', 'description' => 'Comfortable sandals for warm weather.', 'image' => 'images/brand/sandals.jpg'],
-            ['name' => 'Boots', 'description' => 'Durable boots for all seasons.', 'image' => 'images/brand/boots.jpg'],
+            ['name' => 'Sneakers', 'description' => 'Casual and sporty sneakers for everyday wear.', 'image' => 'images/brand/sneakers.jpg', 'navbar_sort_order' => 1],
+            ['name' => 'Formal', 'description' => 'Elegant formal shoes for office and events.', 'image' => 'images/brand/shoes.jpg', 'navbar_sort_order' => 2],
+            ['name' => 'Sandals', 'description' => 'Comfortable sandals for warm weather.', 'image' => 'images/brand/sandals.jpg', 'navbar_sort_order' => 3],
+            ['name' => 'Boots', 'description' => 'Durable boots for all seasons.', 'image' => 'images/brand/boots.jpg', 'navbar_sort_order' => 4],
         ];
 
         foreach ($categories as $categoryData) {
@@ -44,13 +44,17 @@ class DatabaseSeeder extends Seeder
                     'description' => $categoryData['description'],
                     'image' => $categoryData['image'],
                     'status' => CategoryStatus::Active,
+                    'show_in_navbar' => true,
+                    'navbar_sort_order' => $categoryData['navbar_sort_order'],
+                    'shop_sort_order' => $categoryData['navbar_sort_order'],
                 ]
             );
 
             for ($i = 1; $i <= 3; $i++) {
                 $name = "{$categoryData['name']} Style {$i}";
-                Product::query()->updateOrCreate(
-                    ['sku' => strtoupper(Str::slug($categoryData['name'], ''))."-00{$i}"],
+                $sku = strtoupper(Str::slug($categoryData['name'], ''))."-00{$i}";
+                $product = Product::query()->updateOrCreate(
+                    ['sku' => $sku],
                     [
                         'category_id' => $category->id,
                         'name' => $name,
@@ -58,14 +62,19 @@ class DatabaseSeeder extends Seeder
                         'price' => fake()->randomFloat(2, 150, 450),
                         'discount_price' => $i === 1 ? fake()->randomFloat(2, 120, 200) : null,
                         'description' => 'Premium quality footwear from the Sacy Shoes collection.',
-                        'quantity' => fake()->numberBetween(5, 40),
+                        'quantity' => 0,
                         'status' => ProductStatus::Active,
                     ]
                 );
+
+                $this->call(ProductVariantSeeder::class, false, ['product' => $product]);
             }
         }
 
+        $this->call(ShippingSeeder::class);
+        $this->call(CouponSeeder::class);
         $this->call(HomeContentSeeder::class);
         $this->call(PageSeeder::class);
+        $this->call(EmailTemplateSeeder::class);
     }
 }

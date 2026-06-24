@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
 use App\Models\Payment;
 use App\Services\OrderPaymentService;
 use App\Services\PaystackService;
@@ -51,17 +52,19 @@ class PaystackWebhookController extends Controller
             return response()->noContent();
         }
 
+        $order = $payment->order;
+
+        if (! $order || $order->status === OrderStatus::Cancelled) {
+            return response()->noContent();
+        }
+
         $payment->update([
             'metadata' => array_merge($payment->metadata ?? [], [
                 'webhook' => $event,
             ]),
         ]);
 
-        $order = $payment->order;
-
-        if ($order) {
-            $payments->markAsPaid($order, $payment, $data);
-        }
+        $payments->markAsPaid($order, $payment, $data);
 
         return response()->noContent();
     }

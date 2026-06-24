@@ -8,6 +8,8 @@ use App\Models\AdminNotification;
 use App\Models\Order;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 
 class AdminActivityService
@@ -17,11 +19,36 @@ class AdminActivityService
      */
     public function recent(int $limit = 12): Collection
     {
+        return $this->allEvents()->take($limit)->values();
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, array{occurred_at: Carbon, type: string, title: string, message: string, url: ?string}>
+     */
+    public function paginated(int $perPage = 5): LengthAwarePaginator
+    {
+        $events = $this->allEvents();
+        $page = Paginator::resolveCurrentPage('activity_page');
+
+        return new LengthAwarePaginator(
+            $events->forPage($page, $perPage)->values(),
+            $events->count(),
+            $perPage,
+            $page,
+            ['pageName' => 'activity_page'],
+        );
+    }
+
+    /**
+     * @return Collection<int, array{occurred_at: Carbon, type: string, title: string, message: string, url: ?string}>
+     */
+    protected function allEvents(): Collection
+    {
         $events = collect();
 
         Order::query()
             ->latest()
-            ->limit(8)
+            ->limit(20)
             ->get()
             ->each(function (Order $order) use ($events) {
                 $events->push([
@@ -37,7 +64,7 @@ class AdminActivityService
             ->where('payment_status', PaymentStatus::Paid)
             ->whereNotNull('paid_at')
             ->latest('paid_at')
-            ->limit(8)
+            ->limit(20)
             ->get()
             ->each(function (Order $order) use ($events) {
                 $events->push([
@@ -52,7 +79,7 @@ class AdminActivityService
         User::query()
             ->where('role', UserRole::Customer)
             ->latest()
-            ->limit(8)
+            ->limit(20)
             ->get()
             ->each(function (User $user) use ($events) {
                 $events->push([
@@ -67,7 +94,7 @@ class AdminActivityService
         AdminNotification::query()
             ->whereNull('dismissed_at')
             ->latest()
-            ->limit(6)
+            ->limit(15)
             ->get()
             ->each(function (AdminNotification $notification) use ($events) {
                 $events->push([
@@ -81,7 +108,6 @@ class AdminActivityService
 
         return $events
             ->sortByDesc(fn (array $event) => $event['occurred_at'])
-            ->take($limit)
             ->values();
     }
 }

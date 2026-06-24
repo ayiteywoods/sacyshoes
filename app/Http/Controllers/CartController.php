@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCartItemRequest;
 use App\Http\Requests\UpdateCartItemRequest;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,7 @@ class CartController extends Controller
 
     public function index(): View
     {
-        $cart = $this->cart->resolve()->load(['items.product.images', 'items.product.category']);
+        $cart = $this->cart->resolve()->load(['items.product.images', 'items.product.category', 'items.variant']);
         $totals = $this->checkout->calculateTotals($cart->items);
 
         return view('storefront.cart.index', [
@@ -35,7 +36,10 @@ class CartController extends Controller
     {
         $product = Product::query()->findOrFail($request->integer('product_id'));
 
-        $this->cart->add($product, $request->integer('quantity', 1));
+        abort_unless($product->isVisibleOnStorefront(), 404);
+        $variant = ProductVariant::query()->findOrFail($request->integer('product_variant_id'));
+
+        $this->cart->add($product, $variant, $request->integer('quantity', 1));
 
         return redirect()
             ->route('cart.index')

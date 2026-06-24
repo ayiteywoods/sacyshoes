@@ -2,6 +2,7 @@
     'href' => route('home'),
     'size' => 'header',
     'variant' => 'light',
+    'hideTextOnMobile' => false,
 ])
 
 @php
@@ -25,10 +26,10 @@
 <a href="{{ $href }}" {{ $attributes->merge(['class' => 'inline-flex shrink-0 items-center gap-2.5']) }}>
     <img
         src="{{ asset('images/brand/logo1.webp') }}"
-        alt="{{ config('app.name', 'Sacy Shoes') }}"
+        alt="SACYSSHOES"
         class="{{ $imageClass }}"
     >
-    <span class="{{ $textClass }}">
-        <span class="text-brand-red">SACY</span><span class="{{ $shoesColor }}">SHOES</span>
+    <span @class([$textClass, 'hidden sm:inline' => $hideTextOnMobile])>
+        <span class="text-brand-red">SACYS</span><span class="{{ $shoesColor }}">SHOES</span>
     </span>
 </a>

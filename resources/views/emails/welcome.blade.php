@@ -1,14 +1,11 @@
+@php
+    $replacements = \App\Support\EmailReplacements::forUser($user);
+@endphp
+
 <x-mail::message>
-# Welcome to SACYSHOES
-
-Hi {{ $user->first_name ?? $user->name }},
-
-Thanks for creating your account. You can now shop our latest footwear, track orders, and manage your profile anytime.
+{!! app(\App\Services\EmailTemplateService::class)->renderBodyHtml(\App\Models\EmailTemplate::SLUG_WELCOME, $replacements) !!}
 
 <x-mail::button :url="route('shop.index')">
 Start Shopping
 </x-mail::button>
-
-Thanks,<br>
-{{ config('app.name') }}
 </x-mail::message>

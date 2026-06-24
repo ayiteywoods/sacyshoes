@@ -1,16 +1,17 @@
+@php
+    $replacements = \App\Support\EmailReplacements::forOrder($order);
+@endphp
+
 <x-mail::message>
-# Order Received
+{!! app(\App\Services\EmailTemplateService::class)->renderBodyHtml(\App\Models\EmailTemplate::SLUG_ORDER_CREATED, $replacements) !!}
 
-Hi {{ $order->billing_full_name }},
+@include('emails.partials.order-summary', ['order' => $order])
 
-We received your order **{{ $order->order_number }}**. Complete payment to confirm it.
-
-**Total:** {{ config('shop.currency_symbol') }} {{ number_format($order->total, 2) }}
-
-<x-mail::button :url="route('checkout.success', $order)">
-View Order
+<x-mail::button :url="\App\Support\OrderMailUrls::payOrder($order)">
+Pay Now
 </x-mail::button>
 
-Thanks,<br>
-{{ config('app.name') }}
+<x-mail::button :url="\App\Support\OrderMailUrls::viewOrder($order)">
+View Order Details
+</x-mail::button>
 </x-mail::message>

@@ -71,6 +71,7 @@
                 @if ($section->imageUrl())
                     <img src="{{ $section->imageUrl() }}" alt="Hero" class="mt-3 h-40 w-full max-w-md object-cover">
                 @endif
+                <p class="mt-1 text-xs text-brand-muted">Large images are automatically compressed to {{ \App\Support\ImageUpload::targetLabel(4096) }}.</p>
                 @error('image')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
         @endif

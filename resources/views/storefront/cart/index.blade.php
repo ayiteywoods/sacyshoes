@@ -3,29 +3,20 @@
 @section('title', 'Your Cart - SACYSHOES')
 
 @section('content')
-    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-                <p class="section-eyebrow">Your Bag</p>
-                <h1 class="section-title mt-1">Shopping Cart</h1>
-                <p class="mt-2 text-brand-muted">{{ $items->count() }} {{ Str::plural('item', $items->count()) }} in your cart</p>
-            </div>
-            <a href="{{ route('shop.index') }}" class="text-sm font-medium text-brand-red transition hover:underline">
-                <span class="inline-flex items-center gap-1">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                    </svg>
-                    <span>Continue Shopping</span>
-                </span>
-            </a>
-        </div>
+    @include('storefront.partials.cart-hero')
 
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         @if ($items->isEmpty())
-            <div class="mt-12 border border-neutral-200 bg-brand-white p-10 text-center">
+            <div class="border border-neutral-200 bg-brand-white p-10 text-center">
                 <p class="text-brand-muted">Your cart is empty.</p>
                 <a href="{{ route('shop.index') }}" class="btn-primary mt-6 inline-flex px-8 py-3">Browse Products</a>
             </div>
         @else
+            <div class="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Items in your cart are reserved for {{ config('shop.cart_reservation_minutes') }} minutes.
+                Complete checkout and payment before then, or they will be removed and returned to stock.
+            </div>
+
             <div class="mt-10 grid gap-10 lg:grid-cols-3">
                 <div class="space-y-4 lg:col-span-2">
                     @foreach ($items as $item)
@@ -47,35 +38,54 @@
                                 <a href="{{ route('shop.show', $item->product) }}" class="mt-1 block font-medium uppercase tracking-wide transition hover:text-brand-red">
                                     {{ $item->product->name }}
                                 </a>
-                                <p class="mt-1 text-sm text-brand-muted">SKU: {{ $item->product->sku }}</p>
+                                <p class="mt-1 text-sm text-brand-muted">SKU: {{ $item->variant?->sku ?? $item->product->sku }}</p>
+                                @if ($item->optionLabel())
+                                    <p class="mt-1 text-sm text-brand-muted">{{ $item->optionLabel() }}</p>
+                                @endif
                                 <p class="mt-2 font-semibold text-brand-red">
                                     {{ config('shop.currency_symbol') }} {{ number_format($item->unit_price, 2) }}
                                 </p>
                             </div>
 
                             <div class="flex flex-col items-start gap-3 sm:items-end">
-                                <form action="{{ route('cart.update', $item) }}" method="POST" class="flex items-center gap-2">
-                                    @csrf
-                                    @method('PATCH')
-                                    <label for="quantity-{{ $item->id }}" class="sr-only">Quantity</label>
-                                    <input
-                                        id="quantity-{{ $item->id }}"
-                                        type="number"
-                                        name="quantity"
-                                        min="1"
-                                        max="{{ $item->product->quantity }}"
-                                        value="{{ $item->quantity }}"
-                                        class="input-field w-20"
-                                    >
-                                    <button type="submit" class="btn-outline px-3 py-2" aria-label="Update quantity">
-                                        <span class="inline-flex items-center gap-1.5">
+                                @php
+                                    $maxQty = $item->variant?->quantity ?? $item->product->quantity;
+                                @endphp
+                                <div class="flex items-center border border-neutral-200 bg-brand-white">
+                                    <form action="{{ route('cart.update', $item) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="quantity" value="{{ max(1, $item->quantity - 1) }}">
+                                        <button
+                                            type="submit"
+                                            class="flex h-10 w-10 items-center justify-center text-brand-black transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
+                                            aria-label="Decrease quantity"
+                                            @disabled($item->quantity <= 1)
+                                        >
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
                                             </svg>
-                                            <span>Update</span>
-                                        </span>
-                                    </button>
-                                </form>
+                                        </button>
+                                    </form>
+
+                                    <span class="min-w-10 px-2 text-center text-sm font-semibold tabular-nums">{{ $item->quantity }}</span>
+
+                                    <form action="{{ route('cart.update', $item) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="quantity" value="{{ min($maxQty, $item->quantity + 1) }}">
+                                        <button
+                                            type="submit"
+                                            class="flex h-10 w-10 items-center justify-center text-brand-black transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
+                                            aria-label="Increase quantity"
+                                            @disabled($item->quantity >= $maxQty)
+                                        >
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
 
                                 <p class="text-sm font-medium">
                                     {{ config('shop.currency_symbol') }} {{ number_format($item->lineTotal(), 2) }}
@@ -116,13 +126,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-brand-muted">Delivery Fee</span>
-                            <span>
-                                @if ($totals['delivery_fee'] > 0)
-                                    {{ config('shop.currency_symbol') }} {{ number_format($totals['delivery_fee'], 2) }}
-                                @else
-                                    <span class="text-brand-red">Free</span>
-                                @endif
-                            </span>
+                            <span class="text-brand-muted">Calculated at checkout</span>
                         </div>
                         @if ($totals['tax'] > 0)
                             <div class="flex items-center justify-between">
@@ -132,15 +136,16 @@
                         @endif
                         <div class="flex items-center justify-between border-t border-neutral-200 pt-3 text-base">
                             <span class="font-medium">Total</span>
-                            <span class="font-semibold text-brand-red">{{ config('shop.currency_symbol') }} {{ number_format($totals['total'], 2) }}</span>
+                            <span class="font-semibold text-brand-red">{{ config('shop.currency_symbol') }} {{ number_format($totals['subtotal'] + $totals['tax'], 2) }}</span>
                         </div>
+                        <p class="text-xs text-brand-muted">Excludes delivery. Choose your region and delivery type at checkout.</p>
                     </div>
 
                     <a href="{{ route('checkout.create') }}" class="btn-primary mt-6 flex w-full items-center justify-center gap-2 py-3">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.374 3.374 0 01-1.043 3.296 3.374 3.374 0 00-1.048 2.859 3.374 3.374 0 01-1.85 3.135 3.374 3.374 0 00-1.566-.878M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>{{ auth()->check() ? 'Proceed to Checkout' : 'Login to Checkout' }}</span>
+                        <span>Proceed to Checkout</span>
                     </a>
                 </aside>
             </div>

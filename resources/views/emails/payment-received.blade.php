@@ -1,18 +1,17 @@
+@php
+    $replacements = \App\Support\EmailReplacements::forOrder($order);
+@endphp
+
 <x-mail::message>
-# Payment Confirmed
+{!! app(\App\Services\EmailTemplateService::class)->renderBodyHtml(\App\Models\EmailTemplate::SLUG_PAYMENT_RECEIVED, $replacements) !!}
 
-Hi {{ $order->billing_full_name }},
+@include('emails.partials.order-summary', ['order' => $order])
 
-Your payment for order **{{ $order->order_number }}** was successful.
-
-**Amount paid:** {{ config('shop.currency_symbol') }} {{ number_format($order->total, 2) }}
-
-We are now preparing your order.
-
-<x-mail::button :url="route('account.orders.show', $order)">
-Track Order
+<x-mail::button :url="\App\Support\OrderMailUrls::invoice($order)">
+View Invoice
 </x-mail::button>
 
-Thanks,<br>
-{{ config('app.name') }}
+<x-mail::button :url="\App\Support\OrderMailUrls::viewOrder($order)">
+View Order
+</x-mail::button>
 </x-mail::message>

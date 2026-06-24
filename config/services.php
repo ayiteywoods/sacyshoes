@@ -42,6 +42,7 @@ return [
         'live_public_key' => env('PAYSTACK_LIVE_PUBLIC_KEY'),
         'live_secret_key' => env('PAYSTACK_LIVE_SECRET_KEY'),
         'base_url' => env('PAYSTACK_BASE_URL', 'https://api.paystack.co'),
+        'callback_url' => env('PAYSTACK_CALLBACK_URL'),
     ],
 
 ];

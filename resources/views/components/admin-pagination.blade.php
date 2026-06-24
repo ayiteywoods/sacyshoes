@@ -2,6 +2,6 @@
 
 @if ($paginator->hasPages())
     <div {{ $attributes->merge(['class' => 'admin-pagination-wrap']) }}>
-        {{ $paginator->links() }}
+        {{ $paginator->withQueryString()->links() }}
     </div>
 @endif

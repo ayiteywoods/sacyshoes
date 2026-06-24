@@ -201,6 +201,17 @@ class AdminReportService
             ->get();
     }
 
+    public function recentCustomersPaginator(Carbon $from, Carbon $to, int $perPage = 5): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return User::query()
+            ->where('role', UserRole::Customer)
+            ->withCount('orders')
+            ->whereBetween('created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->latest()
+            ->paginate($perPage, ['*'], 'customers_page')
+            ->withQueryString();
+    }
+
     private function percentChange(float $previous, float $current): ?float
     {
         if ($previous <= 0) {

@@ -12,6 +12,12 @@
         My Orders
     </a>
     <a
+        href="{{ route('account.favorites.index') }}"
+        class="account-nav-link {{ request()->routeIs('account.favorites.*') ? 'account-nav-link-active' : 'account-nav-link-inactive' }}"
+    >
+        Favourites
+    </a>
+    <a
         href="{{ route('account.profile.edit') }}"
         class="account-nav-link {{ request()->routeIs('account.profile.*') ? 'account-nav-link-active' : 'account-nav-link-inactive' }}"
     >

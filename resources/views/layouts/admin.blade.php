@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin - Sacy Shoes')</title>
     <link rel="icon" type="image/webp" href="{{ asset('images/brand/logo1.webp') }}">
+    {{-- Dark mode disabled for now
+    @include('partials.theme-init')
+    --}}
+    <script>
+        try {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+        } catch (e) {}
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body
@@ -68,7 +77,7 @@
     <x-admin-sidebar />
 
     <div class="admin-main" :class="sidebarCollapsed ? 'admin-main-collapsed' : ''">
-            <header class="border-b border-neutral-200 bg-brand-white px-4 py-4 sm:px-6">
+            <header class="border-b border-neutral-200 bg-brand-white px-4 py-4 sm:px-6 dark:border-purple-900/50 dark:bg-brand-white">
                 <div class="flex items-center justify-between gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,56rem)_auto] lg:items-center lg:gap-6">
                     <div class="flex min-w-0 items-center gap-3">
                         <button
@@ -118,6 +127,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
                             </svg>
                         </button>
+                        {{-- Dark mode disabled for now
+                        <x-theme-toggle />
+                        --}}
                         <x-admin-notifications />
                         <x-admin-user-menu />
                     </div>
@@ -160,6 +172,7 @@
     </div>
 
     <x-admin-detail-drawer />
+    <x-admin-confirm-modal />
 
     <style>[x-cloak] { display: none !important; }</style>
     @stack('scripts')

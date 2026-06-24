@@ -8,6 +8,7 @@ use App\Enums\ProductStatus;
 use App\Models\AdminNotification;
 use App\Models\Order;
 use App\Models\Product;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 class AdminNotificationService
@@ -24,6 +25,17 @@ class AdminNotificationService
             ->latest()
             ->limit(20)
             ->get();
+    }
+
+    public function paginated(int $perPage = 5): LengthAwarePaginator
+    {
+        $this->sync();
+
+        return AdminNotification::query()
+            ->whereNull('dismissed_at')
+            ->latest()
+            ->paginate($perPage, ['*'], 'notifications_page')
+            ->withQueryString();
     }
 
     public function markAsRead(AdminNotification $notification): void

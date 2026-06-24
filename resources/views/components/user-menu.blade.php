@@ -41,7 +41,8 @@
             </p>
 
             <a href="{{ route('account.dashboard') }}" class="dropdown-item">My Account</a>
-            <a href="{{ route('account.orders.index') }}" class="dropdown-item">My Orders</a>
+            <a href="{{ route('account.orders.index') }}" class="dropdown-item">Track My Orders</a>
+            <a href="{{ route('account.favorites.index') }}" class="dropdown-item">Favourites</a>
             <a href="{{ route('account.profile.edit') }}" class="dropdown-item">Profile Settings</a>
 
             @if(auth()->user()->isAdmin())
@@ -55,8 +56,8 @@
         </div>
     </div>
 @else
-    <div class="flex items-center gap-2">
-        <a href="{{ route('login') }}" class="nav-link">Login</a>
+    <div class="hidden items-center gap-2 sm:flex">
+        <a href="{{ route('login') }}" class="nav-link" title="Log in to track your orders">Login</a>
         <a href="{{ route('register') }}" class="btn-primary">Register</a>
     </div>
 @endauth

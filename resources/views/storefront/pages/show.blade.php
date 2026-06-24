@@ -11,20 +11,23 @@
             ->merge($footerCustomerCarePages ?? collect())
             ->unique('id')
             ->values();
+
+        $hero = $page->heroConfig();
     @endphp
 
-    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <nav class="mb-6 text-sm text-brand-muted">
-            <a href="{{ route('home') }}" class="transition hover:text-brand-red">Home</a>
-            <span class="mx-2">/</span>
-            <span class="text-brand-black">{{ $page->title }}</span>
-        </nav>
+    <x-page-hero
+        :eyebrow="$hero['eyebrow']"
+        :title="$page->title"
+        :description="$hero['description']"
+        :icon="$hero['icon']"
+        :stats="$hero['stats']"
+    />
 
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
             <article class="card border border-neutral-100 bg-white p-6 sm:p-8">
                 <header class="border-b border-neutral-100 pb-5">
-                    <p class="text-xs font-semibold uppercase tracking-widest text-brand-red">Information</p>
-                    <h1 class="mt-2 text-3xl font-semibold tracking-tight text-brand-black sm:text-4xl">{{ $page->title }}</h1>
+                    <p class="text-xs font-semibold uppercase tracking-widest text-brand-red">Page details</p>
                     <p class="mt-2 text-sm text-brand-muted">
                         Last updated {{ $page->updated_at?->format('F j, Y') }}
                     </p>
@@ -55,6 +58,9 @@
                     <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
                         <p class="text-sm font-medium text-brand-black">Need help?</p>
                         <p class="mt-1 text-sm text-brand-muted">If you have questions about this policy, contact our support team.</p>
+                        <a href="{{ route('pages.show', \App\Models\Page::SLUG_CONTACT) }}" class="mt-3 inline-flex text-sm font-medium text-brand-red hover:underline">
+                            Contact support
+                        </a>
                     </div>
                 </aside>
             @endif

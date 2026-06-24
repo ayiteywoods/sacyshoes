@@ -37,7 +37,14 @@
                                 <span class="text-amber-600">Low</span>
                             @endif
                         </td>
-                        <td class="admin-table-cell admin-col-md whitespace-nowrap">{{ $product->status->label() }}</td>
+                        <td class="admin-table-cell admin-col-md whitespace-nowrap">
+                            <div>{{ $product->status->label() }}</div>
+                            @if ($product->isScheduledForFuture())
+                                <div class="mt-1 text-xs text-amber-700">Scheduled {{ $product->storefrontPublishLabel() }}</div>
+                            @elseif ($product->storefrontPublishLabel())
+                                <div class="mt-1 text-xs text-brand-muted">Live since {{ $product->storefrontPublishLabel() }}</div>
+                            @endif
+                        </td>
                         <td class="admin-table-cell admin-col-actions">
                             <x-admin-table-actions
                                 :view-detail-url="route('admin.details.products', $product)"

@@ -22,7 +22,7 @@ class HomeContentSeeder extends Seeder
                 'primary_url' => '/shop',
                 'secondary_label' => 'New Arrivals',
                 'secondary_url' => '/shop',
-                'image_path' => 'images/brand/hero1.png',
+                'image_path' => 'images/brand/hero2.jpeg',
                 'sort_order' => 1,
             ],
             [

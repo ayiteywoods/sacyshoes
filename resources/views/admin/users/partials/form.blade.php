@@ -6,13 +6,13 @@
 @endphp
 
 <div>
-    <label class="block text-sm font-medium">Full name</label>
+    <x-form-label :required="true">Full name</x-form-label>
     <input type="text" name="name" value="{{ old('name', $user?->name) }}" required class="input-field">
     @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
 </div>
 
 <div>
-    <label class="block text-sm font-medium">Email</label>
+    <x-form-label :required="true">Email</x-form-label>
     <input type="email" name="email" value="{{ old('email', $user?->email) }}" required class="input-field">
     @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
 </div>
@@ -24,13 +24,13 @@
 </div>
 
 <div>
-    <label class="block text-sm font-medium">Password {{ $user ? '(leave blank to keep current)' : '' }}</label>
+    <x-form-label :required="!$user">Password {{ $user ? '(leave blank to keep current)' : '' }}</x-form-label>
     <input type="password" name="password" class="input-field" {{ $user ? '' : 'required' }}>
     @error('password')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
 </div>
 
 <div>
-    <label class="block text-sm font-medium">Confirm password</label>
+    <x-form-label :required="!$user">Confirm password</x-form-label>
     <input type="password" name="password_confirmation" class="input-field" {{ $user ? '' : 'required' }}>
 </div>
 

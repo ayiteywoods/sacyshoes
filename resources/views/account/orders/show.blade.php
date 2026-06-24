@@ -21,8 +21,11 @@
                         <div class="flex items-center justify-between gap-4 py-4 text-sm">
                             <div>
                                 <p class="font-medium uppercase tracking-wide">{{ $item->product_name }}</p>
+                                @if ($item->optionLabel())
+                                    <p class="mt-1 text-brand-muted">{{ $item->optionLabel() }}</p>
+                                @endif
                                 <p class="mt-1 text-brand-muted">
-                                    SKU: {{ $item->product_sku }} · Qty: {{ $item->quantity }}
+                                    SKU: {{ $item->variant_sku ?? $item->product_sku }} · Qty: {{ $item->quantity }}
                                 </p>
                             </div>
                             <p class="font-medium">
@@ -33,29 +36,47 @@
                 </div>
             </div>
 
-            <div class="card p-6">
-                <h2 class="page-heading">Delivery Details</h2>
-                <dl class="mt-4 space-y-3 text-sm">
-                    <div>
-                        <dt class="text-brand-muted">Name</dt>
-                        <dd class="font-medium">{{ $order->billing_full_name }}</dd>
+            <div class="grid gap-6 sm:grid-cols-2">
+                <div class="card p-6">
+                    <h2 class="page-heading">Billing Details</h2>
+                    <dl class="mt-4 space-y-3 text-sm">
+                        <div>
+                            <dt class="text-brand-muted">Name</dt>
+                            <dd class="font-medium">{{ $order->billing_full_name }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-brand-muted">Phone</dt>
+                            <dd class="font-medium">{{ $order->billing_phone }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-brand-muted">Email</dt>
+                            <dd class="font-medium">{{ $order->billing_email }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-brand-muted">Address</dt>
+                            <dd class="font-medium">
+                                {{ $order->billing_address }}, {{ $order->billing_city }}, {{ $order->billing_country }}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <div class="card p-6">
+                    <h2 class="page-heading">Shipping Details</h2>
+                    <div class="mt-4">
+                        @include('partials.order-shipping-details', ['order' => $order])
                     </div>
-                    <div>
-                        <dt class="text-brand-muted">Phone</dt>
-                        <dd class="font-medium">{{ $order->billing_phone }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-brand-muted">Email</dt>
-                        <dd class="font-medium">{{ $order->billing_email }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-brand-muted">Address</dt>
-                        <dd class="font-medium">
-                            {{ $order->billing_address }}, {{ $order->billing_city }}, {{ $order->billing_country }}
-                        </dd>
-                    </div>
-                </dl>
+                </div>
             </div>
+
+            @if ($order->payment_status->value === 'paid')
+                <div class="card p-6">
+                    <h2 class="page-heading">Payment Details</h2>
+                    <div class="mt-4">
+                        @include('partials.order-payment-details', ['order' => $order])
+                    </div>
+                </div>
+            @endif
         </div>
 
         <div class="space-y-6">
@@ -66,9 +87,9 @@
                         <dt class="text-brand-muted">Subtotal</dt>
                         <dd>{{ config('shop.currency_symbol') }} {{ number_format($order->subtotal, 2) }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <dt class="text-brand-muted">Delivery</dt>
-                        <dd>{{ config('shop.currency_symbol') }} {{ number_format($order->delivery_fee, 2) }}</dd>
+                    <div class="flex justify-between gap-4">
+                        <dt class="text-brand-muted shrink-0">Delivery fee</dt>
+                        <dd class="text-right">{{ $order->deliveryFeeLabel() }}</dd>
                     </div>
                     @if ($order->tax > 0)
                         <div class="flex justify-between">
@@ -102,6 +123,15 @@
                     <a href="{{ route('paystack.initialize', $order) }}" class="btn-primary mt-6 block w-full py-2.5 text-center">
                         Pay with Paystack
                     </a>
+                @else
+                    <div class="mt-6 flex flex-col gap-2">
+                        <a href="{{ route('orders.invoice', $order) }}" class="btn-primary block w-full py-2.5 text-center" target="_blank" rel="noopener">
+                            View Invoice
+                        </a>
+                        <a href="{{ route('orders.invoice.pdf', $order) }}" class="btn-outline block w-full py-2.5 text-center">
+                            Download PDF
+                        </a>
+                    </div>
                 @endif
             </div>
         </div>

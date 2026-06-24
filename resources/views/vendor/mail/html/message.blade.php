@@ -2,7 +2,7 @@
 {{-- Header --}}
 <x-slot:header>
 <x-mail::header :url="config('app.url')">
-{{ config('app.name') }}
+<img src="{{ \App\Support\MailBranding::logoUrl() }}" class="logo" alt="{{ \App\Support\MailBranding::storeName() }}" width="140">
 </x-mail::header>
 </x-slot:header>
 
@@ -21,7 +21,7 @@
 {{-- Footer --}}
 <x-slot:footer>
 <x-mail::footer>
-© {{ date('Y') }} {{ config('app.name') }}. {{ __('All rights reserved.') }}
+@include('emails.partials.mail-footer')
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>

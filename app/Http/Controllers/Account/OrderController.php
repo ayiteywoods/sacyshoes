@@ -29,6 +29,11 @@ class OrderController extends Controller
         return view('account.orders.show', [
             'order' => $order,
             'trackingSteps' => $order->trackingSteps(),
+            'accountHeroStats' => [
+                ['value' => $order->status->label(), 'label' => 'Status', 'icon' => 'orders', 'tone' => 'red'],
+                ['value' => config('shop.currency_symbol').' '.number_format($order->total, 0), 'label' => 'Total', 'icon' => 'bag', 'tone' => 'white'],
+                ['value' => $order->items->count(), 'label' => 'Items', 'icon' => 'cart', 'tone' => 'red'],
+            ],
         ]);
     }
 }

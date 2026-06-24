@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\OrderPaymentService;
 use App\Services\PaystackService;
+use App\Support\GuestOrderAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,8 +23,12 @@ class PaystackController extends Controller
 
     public function initialize(Order $order): RedirectResponse
     {
-        if ($order->user_id !== auth()->id()) {
-            abort(403);
+        GuestOrderAccess::assertCanAccess($order);
+
+        if ($order->status === OrderStatus::Cancelled) {
+            return redirect()
+                ->route('checkout.success', $order)
+                ->with('error', 'This order was cancelled because payment was not received in time.');
         }
 
         if ($order->payment_status->value === 'paid') {
@@ -40,14 +47,14 @@ class PaystackController extends Controller
                 'provider' => 'paystack',
                 'amount' => $order->total,
                 'currency' => config('shop.currency'),
-                'status' => \App\Enums\PaymentStatus::Pending,
+                'status' => PaymentStatus::Pending,
                 'metadata' => [
                     'order_number' => $order->order_number,
                 ],
             ]
         );
 
-        $callbackUrl = route('paystack.callback');
+        $callbackUrl = $this->paystack->callbackUrl();
 
         $data = $this->paystack->initialize([
             'email' => $order->billing_email,
@@ -81,12 +88,9 @@ class PaystackController extends Controller
         }
 
         $payment = Payment::query()->where('reference', $reference)->firstOrFail();
-
-        if ($payment->user_id !== auth()->id()) {
-            abort(403);
-        }
-
         $order = $payment->order()->firstOrFail();
+
+        GuestOrderAccess::remember($order);
 
         $data = $this->paystack->verify($reference);
 
@@ -99,7 +103,7 @@ class PaystackController extends Controller
         }
 
         $payment->update([
-            'status' => \App\Enums\PaymentStatus::Failed,
+            'status' => PaymentStatus::Failed,
             'channel' => $data['channel'] ?? null,
             'metadata' => array_merge($payment->metadata ?? [], [
                 'verification' => $data,

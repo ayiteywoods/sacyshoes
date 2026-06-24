@@ -82,5 +82,10 @@ class PaystackService
 
         return hash_hmac('sha512', $payload, $secret);
     }
-}
 
+    public function callbackUrl(): string
+    {
+        return config('services.paystack.callback_url')
+            ?: route('paystack.callback');
+    }
+}

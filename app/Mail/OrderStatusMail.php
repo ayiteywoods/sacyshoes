@@ -3,14 +3,18 @@
 namespace App\Mail;
 
 use App\Enums\OrderStatus;
+use App\Models\EmailTemplate;
 use App\Models\Order;
+use App\Services\EmailTemplateService;
+use App\Support\EmailReplacements;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OrderStatusMail extends Mailable
+class OrderStatusMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -21,13 +25,11 @@ class OrderStatusMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = match ($this->order->status) {
-            OrderStatus::Shipped => 'Your order '.$this->order->order_number.' has shipped',
-            OrderStatus::Delivered => 'Your order '.$this->order->order_number.' has been delivered',
-            default => 'Order '.$this->order->order_number.' update',
-        };
+        $templates = app(EmailTemplateService::class);
 
-        return new Envelope(subject: $subject);
+        return new Envelope(
+            subject: $templates->subject(EmailTemplate::SLUG_ORDER_STATUS, EmailReplacements::forOrderStatus($this->order)),
+        );
     }
 
     public function content(): Content

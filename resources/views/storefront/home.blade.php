@@ -13,43 +13,36 @@
 
 @section('content')
     @if ($hero?->is_active)
-        <section class="grid min-h-[60vh] bg-brand-white lg:grid-cols-5">
-            <div class="flex flex-col justify-center px-6 py-12 sm:px-10 sm:py-14 lg:col-span-2 lg:px-12 lg:py-16 xl:px-16">
+        <section
+            class="hero-section"
+            @if ($hero->imageUrl())
+                style="background-image: url('{{ $hero->imageUrl() }}');"
+            @endif
+        >
+            <div class="hero-section-overlay absolute inset-0" aria-hidden="true"></div>
+
+            <div class="relative z-10 mx-auto max-w-3xl">
                 @if ($hero->eyebrow)
                     <p class="section-eyebrow">{{ $hero->eyebrow }}</p>
                 @endif
-                <h1 class="hero-display-title mt-4">
+                <h1 class="hero-display-title hero-display-title-on-image mt-4">
                     {{ $hero->title }}
                     @if ($hero->title_highlight)
                         <br>
-                        <span class="text-brand-red">{{ $hero->title_highlight }}</span>
+                        <span class="text-white">{{ $hero->title_highlight }}</span>
                     @endif
                 </h1>
                 @if ($hero->body)
-                    <p class="mt-6 max-w-sm text-xs leading-relaxed text-brand-muted sm:text-sm">{{ $hero->body }}</p>
+                    <p class="mx-auto mt-6 max-w-2xl text-sm leading-relaxed text-white/90 sm:text-base">{{ $hero->body }}</p>
                 @endif
-                <div class="mt-8 flex flex-wrap gap-3">
+                <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
                     @if ($hero->primary_label)
                         <a href="{{ $hero->resolvedUrl($hero->primary_url) }}" class="btn-primary px-6 py-3">{{ $hero->primary_label }}</a>
                     @endif
                     @if ($hero->secondary_label)
-                        <a href="{{ $hero->resolvedUrl($hero->secondary_url) }}" class="btn-outline-red px-6 py-3">{{ $hero->secondary_label }}</a>
+                        <a href="{{ $hero->resolvedUrl($hero->secondary_url) }}" class="hero-btn-outline px-6 py-3">{{ $hero->secondary_label }}</a>
                     @endif
                 </div>
-            </div>
-
-            <div class="relative min-h-[36vh] lg:col-span-3 lg:min-h-[60vh]">
-                @if ($hero->imageUrl())
-                    <img
-                        src="{{ $hero->imageUrl() }}"
-                        alt="Sacy Shoes premium footwear collection"
-                        width="1264"
-                        height="842"
-                        class="block h-full min-h-[36vh] w-full object-cover object-center lg:min-h-[60vh]"
-                        loading="eager"
-                        decoding="async"
-                    >
-                @endif
             </div>
         </section>
     @endif
@@ -77,11 +70,11 @@
                 @endif
             </div>
 
-            <div class="category-scroll mt-10">
+            <div class="mt-10 grid grid-cols-2 gap-4">
                 @forelse ($categories as $category)
                     <a
                         href="{{ route('shop.index', ['category' => $category->id]) }}"
-                        class="category-card category-card-scroll group"
+                        class="category-card category-card-grid group"
                     >
                         @if($category->storefrontImageUrl())
                             <div
@@ -90,12 +83,11 @@
                             ></div>
                         @endif
                         <div class="category-card-caption">
-                            <h3 class="text-sm font-normal uppercase tracking-wide sm:text-base">{{ $category->name }}</h3>
+                            <h3 class="text-xs font-normal uppercase tracking-wide sm:text-sm">{{ $category->name }}</h3>
                         </div>
                         <span class="category-card-icon" aria-hidden="true">
                             <x-nav-icon :icon="$category->storefrontIcon()" class="h-4 w-4" />
                         </span>
-                        <span class="category-card-cta">Shop Now &rarr;</span>
                     </a>
                 @empty
                     <p class="w-full text-center text-brand-muted">Categories coming soon.</p>
@@ -105,18 +97,28 @@
     @endif
 
     @if ($cta?->is_active)
-        <section class="bg-brand-black py-16 text-white">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section class="shop-hero relative overflow-hidden border-y border-neutral-800 bg-brand-black py-16 text-white">
+            <div class="shop-hero-glow shop-hero-glow-left" aria-hidden="true"></div>
+            <div class="shop-hero-glow shop-hero-glow-right" aria-hidden="true"></div>
+
+            <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
                     <div class="max-w-2xl">
                         @if ($cta->eyebrow)
-                            <p class="section-eyebrow">{{ $cta->eyebrow }}</p>
+                            <div class="flex items-center gap-2.5">
+                                <span class="shop-hero-icon">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                        @include('components.partials.hero-icon', ['name' => 'cart'])
+                                    </svg>
+                                </span>
+                                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-brand-red">{{ $cta->eyebrow }}</p>
+                            </div>
                         @endif
                         @if ($cta->title)
-                            <h2 class="mt-2 text-3xl font-semibold uppercase tracking-wide sm:text-4xl">{{ $cta->title }}</h2>
+                            <h2 class="mt-4 font-serif text-3xl font-bold uppercase leading-tight tracking-tight sm:text-4xl">{{ $cta->title }}</h2>
                         @endif
                         @if ($cta->body)
-                            <p class="mt-3 text-sm text-neutral-300 sm:text-base">{{ $cta->body }}</p>
+                            <p class="mt-4 text-sm leading-relaxed text-neutral-300 sm:text-base">{{ $cta->body }}</p>
                         @endif
                     </div>
                     <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -124,7 +126,7 @@
                             <a href="{{ $cta->resolvedUrl($cta->primary_url) }}" class="btn-primary w-full px-8 py-3 text-center sm:w-auto">{{ $cta->primary_label }}</a>
                         @endif
                         @if ($cta->secondary_label)
-                            <a href="{{ $cta->resolvedUrl($cta->secondary_url) }}" class="btn-outline w-full border-white px-8 py-3 text-center text-white hover:bg-white hover:text-brand-black sm:w-auto">{{ $cta->secondary_label }}</a>
+                            <a href="{{ $cta->resolvedUrl($cta->secondary_url) }}" class="hero-btn-outline w-full px-8 py-3 text-center sm:w-auto">{{ $cta->secondary_label }}</a>
                         @endif
                     </div>
                 </div>
@@ -154,13 +156,20 @@
                     @endif
                 </div>
 
-                <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div id="home-new-arrivals-grid" class="mt-10 grid grid-cols-2 gap-5 lg:grid-cols-4">
                     @forelse ($featuredProducts as $product)
                         @include('storefront.partials.product-card', ['product' => $product])
                     @empty
                         <p class="col-span-full text-brand-muted">Products will appear here once added in the admin dashboard.</p>
                     @endforelse
                 </div>
+
+                @include('storefront.partials.load-more-button', [
+                    'hasMore' => $featuredProducts->hasMorePages(),
+                    'url' => route('home.new-arrivals'),
+                    'target' => '#home-new-arrivals-grid',
+                    'nextPage' => $featuredProducts->currentPage() + 1,
+                ])
             </div>
         </section>
     @endif

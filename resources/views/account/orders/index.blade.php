@@ -1,8 +1,8 @@
 @extends('account.layout')
 
 @section('title', 'My Orders - SACYSHOES')
-@section('account-heading', 'My Orders')
-@section('account-subheading', 'View and track all your orders.')
+@section('account-heading', 'Track My Orders')
+@section('account-subheading', 'Follow payment, processing, shipping, and delivery updates for every order.')
 
 @section('account-content')
     @if ($orders->isEmpty())

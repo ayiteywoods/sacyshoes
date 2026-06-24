@@ -3,9 +3,13 @@
 namespace App\Providers;
 
 use App\Enums\AdminPermission;
+use App\Models\Order;
+use App\Observers\OrderObserver;
+use App\Services\StoreSettingService;
 use App\View\Composers\StorefrontComposer;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +28,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
+        app(StoreSettingService::class)->applyToConfig();
+
         Paginator::defaultView('pagination::tailwind');
         Paginator::defaultSimpleView('pagination::simple-tailwind');
 
@@ -40,5 +50,7 @@ class AppServiceProvider extends ServiceProvider
 
             return $enum ? $user->hasAdminPermission($enum) : false;
         });
+
+        Order::observe(OrderObserver::class);
     }
 }

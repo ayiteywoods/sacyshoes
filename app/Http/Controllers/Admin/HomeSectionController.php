@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HomeSectionRequest;
 use App\Models\HomeSection;
+use App\Support\ImageUpload;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -34,7 +35,7 @@ class HomeSectionController extends Controller
                 Storage::disk('public')->delete($homeSection->image_path);
             }
 
-            $data['image_path'] = $request->file('image')->store('home-sections', 'public');
+            $data['image_path'] = ImageUpload::store($request->file('image'), 'home-sections', 4096, 2400);
         }
 
         $homeSection->update($data);

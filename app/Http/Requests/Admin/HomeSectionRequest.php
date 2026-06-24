@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\HomeSection;
+use App\Support\ImageUpload;
 use Illuminate\Foundation\Http\FormRequest;
 
 class HomeSectionRequest extends FormRequest
@@ -23,7 +23,7 @@ class HomeSectionRequest extends FormRequest
             'primary_url' => ['nullable', 'string', 'max:255'],
             'secondary_label' => ['nullable', 'string', 'max:255'],
             'secondary_url' => ['nullable', 'string', 'max:255'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => ImageUpload::rules(4096),
             'is_active' => ['sometimes', 'boolean'],
         ];
     }
