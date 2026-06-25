@@ -18,7 +18,7 @@ class OrderNotificationService
 {
     public function welcome(User $user): void
     {
-        Mail::to($user->email)->queue(new WelcomeMail($user));
+        Mail::to($user->email)->sendNow(new WelcomeMail($user));
     }
 
     public function orderCreated(Order $order): void
