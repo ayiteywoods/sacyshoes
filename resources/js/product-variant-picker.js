@@ -113,13 +113,7 @@ document.addEventListener('alpine:init', () => {
         },
         get selectionMessage() {
             if (this.selectedVariant) {
-                let message = `${this.selectedVariant.quantity} available for Size ${this.selectedVariant.size}, ${this.selectedVariant.color}`;
-
-                if (this.hasHeel(this.selectedVariant)) {
-                    message += `, ${this.selectedVariant.heel_length} heel`;
-                }
-
-                return message;
+                return null;
             }
 
             if (this.selectedSize && this.selectedColor && this.availableHeels.length > 1) {
