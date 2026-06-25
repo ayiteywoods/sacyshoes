@@ -457,16 +457,6 @@
                             </span>
                         </div>
                     </div>
-
-                    @if ($totals['delivery_fee'] === 0.0 && $totals['subtotal'] >= config('shop.free_delivery_threshold'))
-                        <p class="mt-4 text-xs text-brand-muted">
-                            You qualify for free delivery on this order.
-                        </p>
-                    @elseif ($totals['subtotal'] < config('shop.free_delivery_threshold'))
-                        <p class="mt-4 text-xs text-brand-muted">
-                            Free delivery on orders over {{ config('shop.currency_symbol') }} {{ number_format(config('shop.free_delivery_threshold'), 0) }}.
-                        </p>
-                    @endif
                 </div>
 
                 @include('storefront.partials.checkout-payment')
