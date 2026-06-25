@@ -60,6 +60,7 @@ class Order extends Model
             'payment_status' => PaymentStatus::class,
             'paid_at' => 'datetime',
             'payment_due_at' => 'datetime',
+            'user_id' => 'integer',
         ];
     }
 

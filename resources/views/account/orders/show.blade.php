@@ -120,7 +120,7 @@
                 </dl>
 
                 @if ($order->payment_status->value !== 'paid')
-                    <a href="{{ route('paystack.initialize', $order) }}" class="btn-primary mt-6 block w-full py-2.5 text-center">
+                    <a href="{{ \App\Support\GuestOrderAccess::paystackInitializeUrl($order) }}" class="btn-primary mt-6 block w-full py-2.5 text-center">
                         Pay with Paystack
                     </a>
                 @else

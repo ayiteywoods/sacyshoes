@@ -22,7 +22,7 @@ class OrderMailUrls
 
     public static function payOrder(Order $order): string
     {
-        return route('paystack.initialize', $order);
+        return GuestOrderAccess::paystackInitializeUrl($order);
     }
 
     public static function invoice(Order $order): string

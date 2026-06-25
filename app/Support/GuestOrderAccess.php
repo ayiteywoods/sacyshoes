@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Order;
+use Illuminate\Support\Facades\URL;
 
 class GuestOrderAccess
 {
@@ -14,7 +15,7 @@ class GuestOrderAccess
 
         $user = auth()->user();
 
-        if ($user && $order->user_id === $user->id) {
+        if ($user && (int) $order->user_id === (int) $user->id) {
             return true;
         }
 
@@ -22,7 +23,12 @@ class GuestOrderAccess
             return false;
         }
 
-        return in_array($order->id, session('guest_order_ids', []), true);
+        $guestOrderIds = array_map(
+            static fn ($id) => (int) $id,
+            session('guest_order_ids', [])
+        );
+
+        return in_array((int) $order->id, $guestOrderIds, true);
     }
 
     public static function remember(Order $order): void
@@ -31,8 +37,11 @@ class GuestOrderAccess
             return;
         }
 
-        $orderIds = session('guest_order_ids', []);
-        $orderIds[] = $order->id;
+        $orderIds = array_map(
+            static fn ($id) => (int) $id,
+            session('guest_order_ids', [])
+        );
+        $orderIds[] = (int) $order->id;
 
         session(['guest_order_ids' => array_values(array_unique($orderIds))]);
     }
@@ -40,5 +49,20 @@ class GuestOrderAccess
     public static function assertCanAccess(Order $order): void
     {
         abort_unless(self::canAccess($order), 403);
+    }
+
+    public static function paystackInitializeUrl(Order $order): string
+    {
+        $expiresAt = $order->payment_due_at ?? now()->addDay();
+
+        if ($expiresAt->isPast()) {
+            $expiresAt = now()->addHours(2);
+        }
+
+        return URL::temporarySignedRoute(
+            'paystack.initialize',
+            $expiresAt,
+            ['order' => $order->id],
+        );
     }
 }

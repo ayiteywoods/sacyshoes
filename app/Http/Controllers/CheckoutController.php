@@ -121,7 +121,7 @@ class CheckoutController extends Controller
         app(OrderNotificationService::class)->orderCreated($order);
         app(AdminNotificationService::class)->sync();
 
-        return redirect()->route('paystack.initialize', $order);
+        return redirect()->to(GuestOrderAccess::paystackInitializeUrl($order));
     }
 
     public function success(Order $order): View|RedirectResponse

@@ -136,7 +136,7 @@
                     </a>
                 </div>
             @else
-                <a href="{{ route('paystack.initialize', $order) }}" class="btn-primary flex w-full justify-center px-6 py-3 text-center">
+                <a href="{{ \App\Support\GuestOrderAccess::paystackInitializeUrl($order) }}" class="btn-primary flex w-full justify-center px-6 py-3 text-center">
                     Pay with Paystack
                 </a>
             @endif
