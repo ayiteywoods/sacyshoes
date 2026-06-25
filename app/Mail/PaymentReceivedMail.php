@@ -8,14 +8,13 @@ use App\Services\EmailTemplateService;
 use App\Services\InvoiceService;
 use App\Support\EmailReplacements;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentReceivedMail extends Mailable implements ShouldQueue
+class PaymentReceivedMail extends Mailable
 {
     use Queueable, SerializesModels;
 

@@ -228,9 +228,13 @@ class Order extends Model
 
     public function customerEmail(): ?string
     {
-        $email = trim((string) ($this->billing_email ?: $this->shipping_email));
+        $email = trim((string) ($this->shipping_email ?: $this->billing_email));
 
-        return $email !== '' ? $email : null;
+        if ($email !== '') {
+            return $email;
+        }
+
+        return $this->user?->email;
     }
 
     /**

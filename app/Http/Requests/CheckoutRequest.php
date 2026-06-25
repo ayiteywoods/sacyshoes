@@ -46,7 +46,7 @@ class CheckoutRequest extends FormRequest
             ? $this->boolean('billing_same_as_shipping')
             : ! $this->filled('billing_full_name');
 
-        if ($billingSameAsShipping) {
+        if ($billingSameAsShipping || ! $this->filled('billing_email')) {
             $this->merge([
                 'billing_same_as_shipping' => true,
                 'billing_full_name' => $this->input('shipping_full_name'),

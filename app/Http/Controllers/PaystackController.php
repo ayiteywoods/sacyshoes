@@ -57,7 +57,7 @@ class PaystackController extends Controller
         $callbackUrl = $this->paystack->callbackUrl();
 
         $data = $this->paystack->initialize([
-            'email' => $order->billing_email,
+            'email' => $order->customerEmail() ?? $order->billing_email,
             'amount' => (int) round(((float) $order->total) * 100),
             'reference' => $payment->reference,
             'callback_url' => $callbackUrl,

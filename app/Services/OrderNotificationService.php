@@ -44,7 +44,7 @@ class OrderNotificationService
             return;
         }
 
-        Mail::to($email)->queue(new PaymentReceivedMail($order));
+        Mail::to($email)->sendNow(new PaymentReceivedMail($order));
 
         app(EmailDispatchService::class)->log(
             slug: EmailTemplate::SLUG_PAYMENT_RECEIVED,
