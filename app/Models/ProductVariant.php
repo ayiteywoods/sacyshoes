@@ -21,6 +21,9 @@ class ProductVariant extends Model
     protected function casts(): array
     {
         return [
+            'product_id' => 'integer',
+            'quantity' => 'integer',
+            'reserved_quantity' => 'integer',
             'is_active' => 'boolean',
         ];
     }

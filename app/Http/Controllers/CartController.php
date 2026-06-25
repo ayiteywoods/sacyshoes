@@ -6,9 +6,9 @@ use App\Http\Requests\StoreCartItemRequest;
 use App\Http\Requests\UpdateCartItemRequest;
 use App\Models\CartItem;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Services\CartService;
 use App\Services\CheckoutService;
+use App\Services\ProductVariantResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -16,7 +16,8 @@ class CartController extends Controller
 {
     public function __construct(
         protected CartService $cart,
-        protected CheckoutService $checkout
+        protected CheckoutService $checkout,
+        protected ProductVariantResolver $variantResolver
     ) {}
 
     public function index(): View
@@ -37,7 +38,13 @@ class CartController extends Controller
         $product = Product::query()->findOrFail($request->integer('product_id'));
 
         abort_unless($product->isVisibleOnStorefront(), 404);
-        $variant = ProductVariant::query()->findOrFail($request->integer('product_variant_id'));
+
+        $variant = $this->variantResolver->resolveForProduct(
+            $product,
+            $request->string('variant_size')->toString(),
+            $request->string('variant_color')->toString(),
+            $request->filled('variant_heel') ? $request->string('variant_heel')->toString() : null,
+        );
 
         $this->cart->add($product, $variant, $request->integer('quantity', 1));
 

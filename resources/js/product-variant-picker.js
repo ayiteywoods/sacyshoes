@@ -1,12 +1,26 @@
 document.addEventListener('alpine:init', () => {
-    Alpine.data('productVariantPicker', (variants = [], colorSwatches = {}) => ({
+    Alpine.data('productVariantPicker', (
+        variants = [],
+        colorSwatches = {},
+        initialSize = null,
+        initialColor = null,
+        initialHeel = null,
+    ) => ({
         variants,
         colorSwatches,
-        selectedSize: null,
-        selectedColor: null,
-        selectedHeel: null,
+        selectedSize: initialSize,
+        selectedColor: initialColor,
+        selectedHeel: initialHeel,
+        normalizeOption(value) {
+            return value == null ? '' : String(value).trim().toLowerCase();
+        },
+        optionEquals(left, right) {
+            return this.normalizeOption(left) === this.normalizeOption(right);
+        },
         hasHeel(variant) {
-            return Boolean(variant.heel_length && String(variant.heel_length).trim() !== '');
+            const heel = variant.heel_length ? String(variant.heel_length).trim() : '';
+
+            return heel !== '' && heel.toLowerCase() !== 'flat';
         },
         colorSwatch(color) {
             if (this.colorSwatches[color]) {
@@ -35,7 +49,7 @@ document.addEventListener('alpine:init', () => {
         get availableColors() {
             return [...new Set(
                 this.inStockVariants
-                    .filter((variant) => !this.selectedSize || variant.size === this.selectedSize)
+                    .filter((variant) => !this.selectedSize || this.optionEquals(variant.size, this.selectedSize))
                     .map((variant) => variant.color),
             )];
         },
@@ -43,11 +57,11 @@ document.addEventListener('alpine:init', () => {
             return [...new Set(
                 this.inStockVariants
                     .filter((variant) => {
-                        if (this.selectedSize && variant.size !== this.selectedSize) {
+                        if (this.selectedSize && !this.optionEquals(variant.size, this.selectedSize)) {
                             return false;
                         }
 
-                        if (this.selectedColor && variant.color !== this.selectedColor) {
+                        if (this.selectedColor && !this.optionEquals(variant.color, this.selectedColor)) {
                             return false;
                         }
 
@@ -62,8 +76,8 @@ document.addEventListener('alpine:init', () => {
             }
 
             return this.inStockVariants.filter((variant) =>
-                variant.size === this.selectedSize
-                && variant.color === this.selectedColor,
+                this.optionEquals(variant.size, this.selectedSize)
+                && this.optionEquals(variant.color, this.selectedColor),
             );
         },
         get selectedVariant() {
@@ -82,7 +96,11 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (this.selectedHeel) {
-                return candidates.find((variant) => variant.heel_length === this.selectedHeel) ?? null;
+                return candidates.find((variant) => this.optionEquals(variant.heel_length, this.selectedHeel)) ?? null;
+            }
+
+            if (this.availableHeels.length === 1) {
+                return candidates.find((variant) => this.optionEquals(variant.heel_length, this.availableHeels[0])) ?? null;
             }
 
             const withoutHeel = candidates.filter((variant) => !this.hasHeel(variant));
@@ -120,18 +138,23 @@ document.addEventListener('alpine:init', () => {
             return this.selectedVariant?.quantity ?? 1;
         },
         selectSize(size) {
-            this.selectedSize = this.selectedSize === size ? null : size;
+            this.selectedSize = this.optionEquals(this.selectedSize, size) ? null : size;
             this.selectedColor = null;
             this.selectedHeel = null;
+
+            if (this.selectedSize && this.availableColors.length === 1) {
+                this.selectedColor = this.availableColors[0];
+            }
+
             this.syncQuantityInput();
         },
         selectColor(color) {
-            this.selectedColor = this.selectedColor === color ? null : color;
+            this.selectedColor = this.optionEquals(this.selectedColor, color) ? null : color;
             this.selectedHeel = null;
             this.syncQuantityInput();
         },
         selectHeel(heel) {
-            this.selectedHeel = this.selectedHeel === heel ? null : heel;
+            this.selectedHeel = this.optionEquals(this.selectedHeel, heel) ? null : heel;
             this.syncQuantityInput();
         },
         syncQuantityInput() {

@@ -185,9 +185,9 @@ class CartService
         int $quantity,
         int $alreadyReserved = 0
     ): void {
-        if ($variant->product_id !== $product->id) {
+        if ((int) $variant->product_id !== (int) $product->id) {
             throw ValidationException::withMessages([
-                'product_variant_id' => 'The selected option does not belong to this product.',
+                'variant_size' => 'The selected option does not belong to this product.',
             ]);
         }
 

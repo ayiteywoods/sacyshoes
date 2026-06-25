@@ -13,10 +13,14 @@
         ->values();
 
     $colorSwatches = config('shop.product_color_swatches');
+    $initialSize = old('variant_size');
+    $initialColor = old('variant_color');
+    $initialHeel = old('variant_heel');
 @endphp
 
 <div
-    x-data="productVariantPicker(@js($variants), @js($colorSwatches))"
+    x-data="productVariantPicker(@js($variants), @js($colorSwatches), @js($initialSize), @js($initialColor), @js($initialHeel))"
+    x-init="syncQuantityInput()"
     class="space-y-5"
 >
     <div>
@@ -26,7 +30,7 @@
                 <button
                     type="button"
                     class="min-w-[3rem] border px-3 py-2 text-sm transition"
-                    :class="selectedSize === size ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
+                    :class="optionEquals(selectedSize, size) ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
                     @click="selectSize(size)"
                     x-text="size"
                 ></button>
@@ -48,11 +52,11 @@
                 <button
                     type="button"
                     class="color-swatch h-10 w-10 rounded-full border-2 transition hover:scale-105"
-                    :class="selectedColor === color ? 'border-brand-red ring-2 ring-brand-red ring-offset-2' : 'border-neutral-300'"
+                    :class="optionEquals(selectedColor, color) ? 'border-brand-red ring-2 ring-brand-red ring-offset-2' : 'border-neutral-300'"
                     :style="{ backgroundColor: colorSwatch(color) }"
                     :title="color"
                     :aria-label="color"
-                    :aria-pressed="selectedColor === color"
+                    :aria-pressed="optionEquals(selectedColor, color)"
                     @click="selectColor(color)"
                 ></button>
             </template>
@@ -68,7 +72,7 @@
                 <button
                     type="button"
                     class="border px-3 py-2 text-sm transition"
-                    :class="selectedHeel === heel ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
+                    :class="optionEquals(selectedHeel, heel) ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
                     @click="selectHeel(heel)"
                     x-text="heel"
                 ></button>
@@ -76,11 +80,9 @@
         </div>
     </div>
 
-    <input type="hidden" name="product_variant_id" x-bind:value="selectedVariant ? selectedVariant.id : ''">
+    <input type="hidden" name="variant_size" :value="selectedVariant ? selectedVariant.size : ''">
+    <input type="hidden" name="variant_color" :value="selectedVariant ? selectedVariant.color : ''">
+    <input type="hidden" name="variant_heel" :value="selectedVariant && selectedVariant.heel_length ? selectedVariant.heel_length : ''">
 
     <p class="text-sm" x-show="selectionMessage" x-text="selectionMessage" :class="selectedVariant ? 'text-brand-black' : 'text-brand-muted'"></p>
-
-    @error('product_variant_id')
-        <p class="text-sm text-brand-red">{{ $message }}</p>
-    @enderror
 </div>
