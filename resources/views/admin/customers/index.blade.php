@@ -33,6 +33,8 @@
                             <div class="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
                                 <x-admin-table-actions
                                     :view-detail-url="route('admin.details.customers', $customer)"
+                                    :delete-url="route('admin.customers.destroy', $customer)"
+                                    delete-confirm="Delete this customer? Their order history will be kept in the store."
                                 />
                                 <form method="POST" action="{{ route('admin.customers.toggle-status', $customer) }}">
                                     @csrf

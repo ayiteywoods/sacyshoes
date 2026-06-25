@@ -146,6 +146,7 @@ Route::prefix('admin')
             Route::get('details/customers/{user}', [AdminDetailController::class, 'customer'])->name('details.customers');
             Route::get('customers', [AdminCustomerController::class, 'index'])->name('customers.index');
             Route::patch('customers/{user}/toggle-status', [AdminCustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
+            Route::delete('customers/{user}', [AdminCustomerController::class, 'destroy'])->name('customers.destroy');
         });
 
         Route::middleware('admin.permission:users')->group(function () {

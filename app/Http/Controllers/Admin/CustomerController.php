@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\User;
 use App\Support\AdminTable;
 use Illuminate\Http\RedirectResponse;
@@ -40,5 +39,17 @@ class CustomerController extends Controller
         $user->update(['is_active' => ! $user->is_active]);
 
         return back()->with('success', 'Customer status updated.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        abort_unless($user->role === UserRole::Customer, 404);
+
+        $name = $user->name;
+        $user->delete();
+
+        return redirect()
+            ->route('admin.customers.index')
+            ->with('success', $name.' was deleted successfully.');
     }
 }
