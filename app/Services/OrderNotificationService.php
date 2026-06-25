@@ -31,7 +31,7 @@ class OrderNotificationService
 
         $order->loadMissing('items');
 
-        Mail::to($email)->queue(new OrderCreatedMail($order));
+        Mail::to($email)->sendNow(new OrderCreatedMail($order));
     }
 
     public function paymentReceived(Order $order): void
@@ -71,7 +71,7 @@ class OrderNotificationService
             OrderStatus::Processing,
             OrderStatus::ReadyForDelivery,
             OrderStatus::Shipped,
-            OrderStatus::Delivered => Mail::to($email)->queue(new OrderStatusMail($order, $previousStatus)),
+            OrderStatus::Delivered => Mail::to($email)->sendNow(new OrderStatusMail($order, $previousStatus)),
             OrderStatus::Cancelled => $this->orderCancelled($order, $previousStatus),
             default => null,
         };
@@ -94,6 +94,6 @@ class OrderNotificationService
             return;
         }
 
-        Mail::to($email)->queue(new OrderCancelledMail($order));
+        Mail::to($email)->sendNow(new OrderCancelledMail($order));
     }
 }
