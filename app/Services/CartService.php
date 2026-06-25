@@ -12,19 +12,25 @@ use Illuminate\Validation\ValidationException;
 
 class CartService
 {
+    protected ?Cart $resolvedCart = null;
+
     public function __construct(
         protected StockReservationService $reservations
     ) {}
 
     public function resolve(): Cart
     {
+        if ($this->resolvedCart) {
+            return $this->resolvedCart;
+        }
+
         if (auth()->check()) {
-            return Cart::query()->firstOrCreate([
+            return $this->resolvedCart = Cart::query()->firstOrCreate([
                 'user_id' => auth()->id(),
             ]);
         }
 
-        return Cart::query()->firstOrCreate([
+        return $this->resolvedCart = Cart::query()->firstOrCreate([
             'session_id' => session()->getId(),
         ]);
     }
@@ -174,7 +180,7 @@ class CartService
 
     protected function assertItemBelongsToCurrentCart(CartItem $item): void
     {
-        if ($item->cart_id !== $this->resolve()->id) {
+        if ((int) $item->cart_id !== (int) $this->resolve()->id) {
             abort(403);
         }
     }

@@ -19,6 +19,10 @@ class CartItem extends Model
     protected function casts(): array
     {
         return [
+            'cart_id' => 'integer',
+            'product_id' => 'integer',
+            'product_variant_id' => 'integer',
+            'quantity' => 'integer',
             'unit_price' => 'decimal:2',
             'reserved_until' => 'datetime',
         ];
