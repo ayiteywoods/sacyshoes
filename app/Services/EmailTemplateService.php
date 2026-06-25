@@ -96,6 +96,18 @@ class EmailTemplateService
         }
     }
 
+    public function syncDefaultContent(string $slug): void
+    {
+        EmailTemplate::query()
+            ->where('slug', $slug)
+            ->update([
+                'subject' => $this->defaultSubject($slug),
+                'body' => $this->defaultBody($slug),
+            ]);
+
+        $this->clearCache($slug);
+    }
+
     /**
      * @param  array<string, string>  $replacements
      */
@@ -113,7 +125,7 @@ class EmailTemplateService
         return match ($slug) {
             EmailTemplate::SLUG_WELCOME => 'Welcome to {{store_name}}',
             EmailTemplate::SLUG_ORDER_CREATED => 'Order {{order_number}} received',
-            EmailTemplate::SLUG_PAYMENT_RECEIVED => 'Invoice #{{order_number}} - {{store_name}}',
+            EmailTemplate::SLUG_PAYMENT_RECEIVED => 'Good things are heading your way! — {{store_name}}',
             EmailTemplate::SLUG_ORDER_STATUS => 'Delivery update for order {{order_number}}',
             EmailTemplate::SLUG_ORDER_CANCELLED => 'Order {{order_number}} cancelled',
             default => 'Message from {{store_name}}',
@@ -140,11 +152,15 @@ Thank you for shopping with {{store_name}}. We received your order and it is wai
 Complete payment by **{{payment_due_at}}** to confirm your order. If payment is not received within {{payment_timeout_hours}} hours, the order will be cancelled and items returned to stock.
 MD,
             EmailTemplate::SLUG_PAYMENT_RECEIVED => <<<'MD'
-# Payment Confirmed
+# Good things are heading your way!
 
 Hi {{customer_name}},
 
-Your payment for order **{{order_number}}** was successful. Your invoice is attached to this email as a PDF.
+We have finished processing your order. Here's a reminder of what you've ordered.
+
+Your invoice is attached to this email as a PDF — you can open it directly from your inbox without clicking any links.
+
+If you have questions, contact us at {{contact_email}} or {{contact_phone}}.
 MD,
             EmailTemplate::SLUG_ORDER_STATUS => <<<'MD'
 # Delivery Update

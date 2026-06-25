@@ -44,12 +44,13 @@ class PaymentReceivedMail extends Mailable
     public function attachments(): array
     {
         $invoices = app(InvoiceService::class);
+        $order = $this->order->loadMissing('items');
+        $filename = $invoices->pdfFilename($order);
+        $pdf = $invoices->pdfBinary($order);
 
         return [
-            Attachment::fromData(
-                fn () => $invoices->pdfBinary($this->order->fresh(['items'])),
-                $invoices->pdfFilename($this->order),
-            )->withMime('application/pdf'),
+            Attachment::fromData(fn () => $pdf, $filename)
+                ->withMime('application/pdf'),
         ];
     }
 }

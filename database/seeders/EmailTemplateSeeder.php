@@ -86,11 +86,13 @@ Complete payment by **{{payment_due_at}}** to confirm your order. If payment is 
 If you have questions, contact us at {{contact_email}} or {{contact_phone}}.
 MD,
             EmailTemplate::SLUG_PAYMENT_RECEIVED => <<<'MD'
-# Payment Confirmed
+# Good things are heading your way!
 
 Hi {{customer_name}},
 
-Your payment for order **{{order_number}}** was successful. Your invoice is attached to this email as a PDF.
+We have finished processing your order. Here's a reminder of what you've ordered.
+
+Your invoice is attached to this email as a PDF — you can open it directly from your inbox without clicking any links.
 
 If you have questions, contact us at {{contact_email}} or {{contact_phone}}.
 MD,

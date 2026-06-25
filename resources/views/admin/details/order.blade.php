@@ -25,11 +25,13 @@
             <dd class="mt-1">{{ $order->paid_at->format('M j, Y g:i A') }}</dd>
         </div>
     @endif
-    @if ($order->payment?->paystackTransactionId())
+    @if ($order->payment?->paystackReference())
         <div class="sm:col-span-2">
             <dt class="text-xs font-medium uppercase tracking-wide text-brand-muted">Paystack reference</dt>
-            <dd class="mt-1 break-all font-medium">{{ $order->order_number }}-{{ $order->payment->paystackTransactionId() }}</dd>
+            <dd class="mt-1 break-all font-medium">{{ $order->payment->paystackReference() }}</dd>
         </div>
+    @endif
+    @if ($order->payment?->paystackTransactionId())
         <div class="sm:col-span-2">
             <dt class="text-xs font-medium uppercase tracking-wide text-brand-muted">Paystack transaction ID</dt>
             <dd class="mt-1 break-all font-medium">{{ $order->payment->paystackTransactionId() }}</dd>

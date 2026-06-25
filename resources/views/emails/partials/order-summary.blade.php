@@ -1,6 +1,6 @@
-@props(['order'])
+@props(['order', 'showEmail' => false])
 
-**Order:** {{ $order->order_number }}
+**Order #{{ $order->order_number }}** ({{ ($order->paid_at ?? $order->created_at)->format('F j, Y') }})
 
 @foreach ($order->items as $item)
 - {{ $item->product_name }}@if ($item->optionLabel()) ({{ $item->optionLabel() }})@endif — {{ $item->quantity }} × {{ config('shop.currency_symbol') }}{{ number_format($item->unit_price, 2) }} = {{ config('shop.currency_symbol') }}{{ number_format($item->total_price, 2) }}
@@ -24,4 +24,6 @@
 {{ $order->shipping_full_name }}  
 {{ $order->shipping_address }}, {{ $order->shipping_city }}  
 {{ $order->shipping_country }}  
-{{ $order->shipping_phone }}
+{{ $order->shipping_phone }}@if ($showEmail && $order->customerEmail())
+
+{{ $order->customerEmail() }}@endif
