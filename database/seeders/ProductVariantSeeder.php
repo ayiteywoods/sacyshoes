@@ -30,15 +30,18 @@ class ProductVariantSeeder extends Seeder
 
         $product->variants()->delete();
         $totalStock = 0;
+        $variantIndex = 0;
 
         foreach ($sizes as $size) {
             foreach ($colors as $color) {
                 foreach ($heels as $heel) {
-                    if (fake()->boolean(35)) {
+                    $variantIndex++;
+
+                    if ($variantIndex % 3 === 0) {
                         continue;
                     }
 
-                    $quantity = fake()->numberBetween(1, 8);
+                    $quantity = 2 + ($variantIndex % 7);
                     $totalStock += $quantity;
 
                     ProductVariant::query()->create([
@@ -61,7 +64,7 @@ class ProductVariantSeeder extends Seeder
                 'size' => '38',
                 'color' => 'Black',
                 'heel_length' => 'Flat',
-                'quantity' => fake()->numberBetween(5, 15),
+                'quantity' => 10,
                 'is_active' => true,
             ]);
 

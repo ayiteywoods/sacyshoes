@@ -53,14 +53,15 @@ class DatabaseSeeder extends Seeder
             for ($i = 1; $i <= 3; $i++) {
                 $name = "{$categoryData['name']} Style {$i}";
                 $sku = strtoupper(Str::slug($categoryData['name'], ''))."-00{$i}";
+                $basePrice = 149.99 + ($i * 50) + ($categoryData['navbar_sort_order'] * 10);
                 $product = Product::query()->updateOrCreate(
                     ['sku' => $sku],
                     [
                         'category_id' => $category->id,
                         'name' => $name,
                         'slug' => Str::slug($name),
-                        'price' => fake()->randomFloat(2, 150, 450),
-                        'discount_price' => $i === 1 ? fake()->randomFloat(2, 120, 200) : null,
+                        'price' => round($basePrice, 2),
+                        'discount_price' => $i === 1 ? round($basePrice - 30, 2) : null,
                         'description' => 'Premium quality footwear from the Sacy Shoes collection.',
                         'quantity' => 0,
                         'status' => ProductStatus::Active,
