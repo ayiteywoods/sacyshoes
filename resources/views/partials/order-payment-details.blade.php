@@ -10,13 +10,11 @@
             <dt class="text-brand-muted">Payment status</dt>
             <dd class="font-medium">{{ $order->payment_status->label() }}</dd>
         </div>
-        @if ($payment->paystackReference())
+        @if ($payment->paystackTransactionId())
             <div>
                 <dt class="text-brand-muted">Paystack reference</dt>
-                <dd class="font-medium break-all">{{ $payment->paystackReference() }}</dd>
+                <dd class="font-medium break-all">{{ $order->order_number }}-{{ $payment->paystackTransactionId() }}</dd>
             </div>
-        @endif
-        @if ($payment->paystackTransactionId())
             <div>
                 <dt class="text-brand-muted">Paystack transaction ID</dt>
                 <dd class="font-medium break-all">{{ $payment->paystackTransactionId() }}</dd>
