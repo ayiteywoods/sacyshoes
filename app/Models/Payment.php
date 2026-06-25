@@ -44,7 +44,32 @@ class Payment extends Model
 
     public function paystackReference(): ?string
     {
-        return $this->reference;
+        $displayReference = data_get($this->metadata, 'display_reference');
+
+        if (filled($displayReference)) {
+            return (string) $displayReference;
+        }
+
+        $orderNumber = $this->order?->order_number;
+        $receiptNumber = $this->paystackReceiptNumber();
+
+        if ($orderNumber && $receiptNumber) {
+            return $orderNumber.'-'.$receiptNumber;
+        }
+
+        return $orderNumber ?: $this->reference;
+    }
+
+    public function paystackReceiptNumber(): ?string
+    {
+        $receipt = data_get($this->metadata, 'verification.receipt_number')
+            ?? data_get($this->metadata, 'webhook.data.receipt_number');
+
+        if (filled($receipt)) {
+            return (string) $receipt;
+        }
+
+        return $this->paystackTransactionId();
     }
 
     public function paystackTransactionId(): ?string

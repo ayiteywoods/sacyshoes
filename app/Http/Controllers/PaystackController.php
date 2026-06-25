@@ -11,7 +11,6 @@ use App\Services\PaystackService;
 use App\Support\GuestOrderAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PaystackController extends Controller
@@ -37,7 +36,7 @@ class PaystackController extends Controller
                 ->with('success', 'This order has already been paid.');
         }
 
-        $reference = $order->payment?->reference ?? $this->makeReference($order);
+        $reference = $this->resolvePaymentReference($order);
 
         $payment = Payment::query()->updateOrCreate(
             ['reference' => $reference],
@@ -115,8 +114,26 @@ class PaystackController extends Controller
             ->with('error', 'Payment was not successful. Please try again.');
     }
 
-    protected function makeReference(Order $order): string
+    protected function resolvePaymentReference(Order $order): string
     {
-        return 'SACY-'.str_replace('-', '', (string) Str::uuid()).'-'.$order->id;
+        $latestPayment = Payment::query()
+            ->where('order_id', $order->id)
+            ->latest('id')
+            ->first();
+
+        if ($latestPayment?->status === PaymentStatus::Pending) {
+            return $latestPayment->reference;
+        }
+
+        $failedAttempts = Payment::query()
+            ->where('order_id', $order->id)
+            ->where('status', PaymentStatus::Failed)
+            ->count();
+
+        if ($failedAttempts === 0) {
+            return (string) $order->order_number;
+        }
+
+        return $order->order_number.'-'.($failedAttempts + 1);
     }
 }

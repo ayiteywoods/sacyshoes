@@ -40,13 +40,22 @@ class OrderPaymentService
                 ? Carbon::parse($data['paid_at'])
                 : now();
 
+            $transactionId = isset($data['id']) ? (string) $data['id'] : $payment->provider_transaction_id;
+            $receiptNumber = filled($data['receipt_number'] ?? null)
+                ? (string) $data['receipt_number']
+                : $transactionId;
+            $displayReference = $receiptNumber
+                ? $order->order_number.'-'.$receiptNumber
+                : null;
+
             $payment->update([
                 'status' => PaymentStatus::Paid,
                 'channel' => $data['channel'] ?? data_get($data, 'authorization.channel') ?? $payment->channel,
-                'provider_transaction_id' => isset($data['id']) ? (string) $data['id'] : $payment->provider_transaction_id,
+                'provider_transaction_id' => $transactionId ?: $payment->provider_transaction_id,
                 'paid_at' => $paidAt,
                 'metadata' => array_merge($payment->metadata ?? [], [
                     'verification' => $data,
+                    'display_reference' => $displayReference,
                 ]),
             ]);
 
