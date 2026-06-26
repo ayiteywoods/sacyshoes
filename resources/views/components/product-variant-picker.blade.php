@@ -48,7 +48,7 @@
     <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
         <div class="mt-3 flex flex-wrap gap-2">
-            @forelse ($allSizes as $size)
+            @forelse ($allSizes as $index => $size)
                 @php
                     $sizeInStock = $variants->contains(
                         fn (array $variant) => strcasecmp(trim((string) $variant['size']), trim($size)) === 0
@@ -58,10 +58,10 @@
                 <button
                     type="button"
                     class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition {{ $sizeInStock ? 'border-neutral-300 bg-white text-brand-black' : 'variant-size-option--unavailable border-neutral-900 bg-white text-brand-black' }}"
-                    :class='sizeButtonClass(@js($size))'
-                    :disabled='! isSizeInStock(@js($size))'
-                    :aria-disabled='! isSizeInStock(@js($size))'
-                    @click='selectSize(@js($size))'
+                    :class="sizeButtonClass(sizeOptions[{{ $index }}])"
+                    :disabled="! isSizeInStock(sizeOptions[{{ $index }}])"
+                    :aria-disabled="! isSizeInStock(sizeOptions[{{ $index }}])"
+                    @click="selectSize(sizeOptions[{{ $index }}])"
                     @unless ($sizeInStock) disabled @endunless
                 >{{ $size }}</button>
             @empty
