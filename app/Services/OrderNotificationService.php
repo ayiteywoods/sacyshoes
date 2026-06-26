@@ -3,15 +3,13 @@
 namespace App\Services;
 
 use App\Enums\OrderStatus;
-use App\Mail\OrderCancelledMail;
-use App\Mail\OrderCreatedMail;
+use App\Enums\UserRole;
 use App\Mail\OrderStatusMail;
 use App\Mail\PaymentReceivedMail;
 use App\Mail\WelcomeMail;
 use App\Models\EmailTemplate;
 use App\Models\Order;
 use App\Models\User;
-use App\Services\EmailDispatchService;
 use Illuminate\Support\Facades\Mail;
 
 class OrderNotificationService
@@ -23,15 +21,7 @@ class OrderNotificationService
 
     public function orderCreated(Order $order): void
     {
-        $email = $order->customerEmail();
-
-        if (! $email) {
-            return;
-        }
-
-        $order->loadMissing('items');
-
-        Mail::to($email)->sendNow(new OrderCreatedMail($order));
+        // Customers are only emailed after payment is confirmed.
     }
 
     public function paymentReceived(Order $order): void
@@ -40,7 +30,7 @@ class OrderNotificationService
 
         $email = $order->customerEmail();
 
-        if (! $email) {
+        if (! $email || $this->isExcludedInbox($email)) {
             return;
         }
 
@@ -61,7 +51,7 @@ class OrderNotificationService
 
         $email = $order->customerEmail();
 
-        if (! $email) {
+        if (! $email || $this->isExcludedInbox($email)) {
             return;
         }
 
@@ -79,21 +69,30 @@ class OrderNotificationService
 
     public function orderCancelledUnpaid(Order $order): void
     {
-        $this->orderCancelled($order, OrderStatus::PendingPayment);
+        // Unpaid cancellations do not trigger customer emails.
     }
 
     protected function orderCancelled(Order $order, OrderStatus $previousStatus): void
     {
-        if ($previousStatus !== OrderStatus::PendingPayment) {
-            return;
+        // Cancelled orders do not trigger customer emails.
+    }
+
+    protected function isExcludedInbox(string $email): bool
+    {
+        $normalized = strtolower(trim($email));
+
+        $excluded = array_filter([
+            strtolower(trim((string) config('shop.contact_email'))),
+            strtolower(trim((string) config('mail.from.address'))),
+        ]);
+
+        if (in_array($normalized, $excluded, true)) {
+            return true;
         }
 
-        $email = $order->customerEmail();
-
-        if (! $email) {
-            return;
-        }
-
-        Mail::to($email)->sendNow(new OrderCancelledMail($order));
+        return User::query()
+            ->where('email', $email)
+            ->where('role', UserRole::Admin)
+            ->exists();
     }
 }
