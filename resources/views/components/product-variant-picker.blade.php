@@ -48,18 +48,25 @@
     <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
         <div class="mt-3 flex flex-wrap gap-2">
-            <template x-for="size in sizeOptions" :key="size">
+            @forelse ($allSizes as $size)
+                @php
+                    $sizeInStock = $variants->contains(
+                        fn (array $variant) => strcasecmp(trim((string) $variant['size']), trim($size)) === 0
+                            && $variant['quantity'] > 0,
+                    );
+                @endphp
                 <button
                     type="button"
-                    class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition"
-                    :class="sizeButtonClass(size)"
-                    :disabled="! isSizeInStock(size)"
-                    :aria-disabled="! isSizeInStock(size)"
-                    @click="selectSize(size)"
-                    x-text="size"
-                ></button>
-            </template>
-            <p x-show="sizeOptions.length === 0" x-cloak class="text-sm text-brand-muted">No sizes configured for this product.</p>
+                    class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition {{ $sizeInStock ? 'border-neutral-300 bg-white text-brand-black' : 'variant-size-option--unavailable border-neutral-900 bg-white text-brand-black' }}"
+                    :class='sizeButtonClass(@js($size))'
+                    :disabled='! isSizeInStock(@js($size))'
+                    :aria-disabled='! isSizeInStock(@js($size))'
+                    @click='selectSize(@js($size))'
+                    @unless ($sizeInStock) disabled @endunless
+                >{{ $size }}</button>
+            @empty
+                <p class="text-sm text-brand-muted">No sizes configured for this product.</p>
+            @endforelse
         </div>
     </div>
 
