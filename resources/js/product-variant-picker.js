@@ -1,13 +1,11 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('productVariantPicker', (
         variants = [],
-        colorSwatches = {},
         initialSize = null,
         initialColor = null,
         initialHeel = null,
     ) => ({
         variants,
-        colorSwatches,
         selectedSize: initialSize,
         selectedColor: initialColor,
         selectedHeel: initialHeel,
@@ -22,21 +20,6 @@ document.addEventListener('alpine:init', () => {
 
             return heel !== '' && heel.toLowerCase() !== 'flat';
         },
-        colorSwatch(color) {
-            if (this.colorSwatches[color]) {
-                return this.colorSwatches[color];
-            }
-
-            let hash = 0;
-
-            for (let index = 0; index < color.length; index++) {
-                hash = color.charCodeAt(index) + ((hash << 5) - hash);
-            }
-
-            const hue = Math.abs(hash) % 360;
-
-            return `hsl(${hue}, 45%, 50%)`;
-        },
         get inStockVariants() {
             return this.variants.filter((variant) => variant.quantity > 0);
         },
@@ -47,11 +30,22 @@ document.addEventListener('alpine:init', () => {
             return [...new Set(this.inStockVariants.map((variant) => variant.size))];
         },
         get availableColors() {
-            return [...new Set(
-                this.inStockVariants
-                    .filter((variant) => !this.selectedSize || this.optionEquals(variant.size, this.selectedSize))
-                    .map((variant) => variant.color),
-            )];
+            const seen = new Set();
+
+            return this.inStockVariants
+                .filter((variant) => !this.selectedSize || this.optionEquals(variant.size, this.selectedSize))
+                .map((variant) => variant.color)
+                .filter((color) => {
+                    const key = this.normalizeOption(color);
+
+                    if (! key || seen.has(key)) {
+                        return false;
+                    }
+
+                    seen.add(key);
+
+                    return true;
+                });
         },
         get availableHeels() {
             return [...new Set(

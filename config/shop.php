@@ -57,17 +57,6 @@ return [
 
     'product_colors' => ['Black', 'Brown', 'Nude', 'White', 'Red', 'Beige', 'Gold'],
 
-    'product_color_swatches' => [
-        'Black' => '#1a1a1a',
-        'Brown' => '#6b4423',
-        'Nude' => '#e3bc9a',
-        'White' => '#ffffff',
-        'Red' => '#c41e3a',
-        'Beige' => '#d4b896',
-        'Gold' => '#d4af37',
-        'Default' => '#9ca3af',
-    ],
-
     'product_heel_lengths' => ['Flat', '1in', '2in', '3in', '4in'],
 
     'delivery_info' => [

@@ -133,7 +133,7 @@
         <div class="flex items-center justify-between gap-3">
             <div>
                 <label class="block text-sm font-medium">Size & color options<span class="text-brand-red" aria-hidden="true"> *</span></label>
-                <p class="mt-1 text-xs text-brand-muted">Add the combinations customers can choose from. Heel length is optional.</p>
+                <p class="mt-1 text-xs text-brand-muted">Add the combinations customers can choose from. Heel length is optional. Color names appear on the shop exactly as you type them.</p>
             </div>
             <button type="button" class="btn-outline px-3 py-2 text-xs" @click="addRow()">Add option</button>
         </div>
@@ -159,7 +159,15 @@
                                 <input type="text" :name="`variants[${index}][size]`" x-model="row.size" list="product-sizes" required class="input-field min-w-[5rem]">
                             </td>
                             <td class="px-2 py-2">
-                                <input type="text" :name="`variants[${index}][color]`" x-model="row.color" list="product-colors" required class="input-field min-w-[6rem]">
+                                <input
+                                    type="text"
+                                    :name="`variants[${index}][color]`"
+                                    x-model="row.color"
+                                    autocomplete="off"
+                                    placeholder="e.g. Black"
+                                    required
+                                    class="input-field min-w-[6rem]"
+                                >
                             </td>
                             <td class="px-2 py-2">
                                 <input type="text" :name="`variants[${index}][heel_length]`" x-model="row.heel_length" list="product-heel-lengths" placeholder="Optional" class="input-field min-w-[6rem]">
@@ -186,11 +194,6 @@
         <datalist id="product-sizes">
             @foreach (config('shop.product_sizes') as $size)
                 <option value="{{ $size }}"></option>
-            @endforeach
-        </datalist>
-        <datalist id="product-colors">
-            @foreach (config('shop.product_colors') as $color)
-                <option value="{{ $color }}"></option>
             @endforeach
         </datalist>
         <datalist id="product-heel-lengths">

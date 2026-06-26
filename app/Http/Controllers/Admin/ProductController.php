@@ -127,8 +127,8 @@ class ProductController extends Controller
 
             $variant->fill([
                 'sku' => $sku,
-                'size' => $variantData['size'],
-                'color' => $variantData['color'],
+                'size' => trim((string) $variantData['size']),
+                'color' => trim((string) $variantData['color']),
                 'heel_length' => $heelLength,
                 'quantity' => (int) $variantData['quantity'],
                 'is_active' => (bool) ($variantData['is_active'] ?? true),

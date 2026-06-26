@@ -457,10 +457,6 @@
         @apply inline-flex items-center justify-center rounded-none border border-white bg-transparent px-5 py-2.5 text-xs font-normal uppercase tracking-wide text-white transition hover:bg-white hover:text-brand-black;
     }
 
-    .color-swatch {
-        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-    }
-
     .btn-outline-red {
         @apply inline-flex items-center justify-center rounded-none border border-brand-red bg-brand-white px-5 py-2.5 text-xs font-normal tracking-wide text-brand-red transition hover:bg-brand-red hover:text-white;
         text-transform: uppercase;

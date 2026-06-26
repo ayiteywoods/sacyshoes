@@ -12,14 +12,13 @@
         ])
         ->values();
 
-    $colorSwatches = config('shop.product_color_swatches');
     $initialSize = old('variant_size');
     $initialColor = old('variant_color');
     $initialHeel = old('variant_heel');
 @endphp
 
 <div
-    x-data="productVariantPicker(@js($variants), @js($colorSwatches), @js($initialSize), @js($initialColor), @js($initialHeel))"
+    x-data="productVariantPicker(@js($variants), @js($initialSize), @js($initialColor), @js($initialHeel))"
     x-init="syncQuantityInput()"
     class="space-y-5"
 >
@@ -39,25 +38,17 @@
     </div>
 
     <div>
-        <div class="flex items-center gap-2">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Color</p>
-            <span
-                x-show="selectedColor"
-                x-text="selectedColor"
-                class="text-xs font-medium normal-case tracking-normal text-brand-black"
-            ></span>
-        </div>
-        <div class="mt-3 flex flex-wrap gap-3">
+        <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">
+            Color <span class="text-brand-red" aria-hidden="true">*</span>
+        </p>
+        <div class="mt-3 flex flex-col gap-2">
             <template x-for="color in availableColors" :key="color">
                 <button
                     type="button"
-                    class="color-swatch h-10 w-10 rounded-full border-2 transition hover:scale-105"
-                    :class="optionEquals(selectedColor, color) ? 'border-brand-red ring-2 ring-brand-red ring-offset-2' : 'border-neutral-300'"
-                    :style="{ backgroundColor: colorSwatch(color) }"
-                    :title="color"
-                    :aria-label="color"
-                    :aria-pressed="optionEquals(selectedColor, color)"
+                    class="w-full border px-4 py-3 text-center text-sm transition"
+                    :class="optionEquals(selectedColor, color) ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
                     @click="selectColor(color)"
+                    x-text="color"
                 ></button>
             </template>
         </div>
