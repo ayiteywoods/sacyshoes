@@ -48,18 +48,18 @@
     <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
         <div class="mt-3 flex flex-wrap gap-2">
-            @forelse ($allSizes as $size)
+            <template x-for="size in sizeOptions" :key="size">
                 <button
                     type="button"
                     class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition"
-                    :class="sizeButtonClass(@js($size))"
-                    :disabled="! isSizeInStock(@js($size))"
-                    :aria-disabled="! isSizeInStock(@js($size))"
-                    @click="selectSize(@js($size))"
-                >{{ $size }}</button>
-            @empty
-                <p class="text-sm text-brand-muted">No sizes configured for this product.</p>
-            @endforelse
+                    :class="sizeButtonClass(size)"
+                    :disabled="! isSizeInStock(size)"
+                    :aria-disabled="! isSizeInStock(size)"
+                    @click="selectSize(size)"
+                    x-text="size"
+                ></button>
+            </template>
+            <p x-show="sizeOptions.length === 0" x-cloak class="text-sm text-brand-muted">No sizes configured for this product.</p>
         </div>
     </div>
 
@@ -119,10 +119,10 @@
                     type="number"
                     name="quantity"
                     min="1"
-                    max="1"
-                    value="1"
+                    x-model.number="quantity"
+                    :max="maxQuantity"
                     class="input-field mt-0 h-10 w-14 rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    disabled
+                    :disabled="!selectedVariant"
                     readonly
                 >
                 <button

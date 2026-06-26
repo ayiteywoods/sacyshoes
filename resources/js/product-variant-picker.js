@@ -11,6 +11,7 @@ document.addEventListener('alpine:init', () => {
         selectedSize: initialSize,
         selectedColor: initialColor,
         selectedHeel: initialHeel,
+        quantity: 1,
         init() {
             if (this.selectedSize && ! this.isSizeInStock(this.selectedSize)) {
                 this.selectedSize = null;
@@ -145,11 +146,6 @@ document.addEventListener('alpine:init', () => {
         get maxQuantity() {
             return this.selectedVariant?.quantity ?? 1;
         },
-        get quantity() {
-            const input = document.getElementById('quantity');
-
-            return Number(input?.value || 1);
-        },
         selectSize(size) {
             if (! this.isSizeInStock(size)) {
                 return;
@@ -175,27 +171,22 @@ document.addEventListener('alpine:init', () => {
             this.syncQuantityInput();
         },
         adjustQuantity(delta) {
-            const input = document.getElementById('quantity');
-
-            if (!input || input.disabled) {
+            if (! this.selectedVariant) {
                 return;
             }
 
-            const next = Math.min(
-                Math.max(Number(input.value || 1) + delta, 1),
-                Number(input.max || 1),
+            this.quantity = Math.min(
+                Math.max(this.quantity + delta, 1),
+                this.maxQuantity,
             );
-
-            input.value = String(next);
         },
         syncQuantityInput() {
-            const input = document.getElementById('quantity');
             const submit = document.getElementById('add-to-cart');
 
-            if (input) {
-                input.max = this.maxQuantity;
-                input.value = Math.min(Number(input.value || 1), this.maxQuantity || 1);
-                input.disabled = !this.selectedVariant;
+            if (! this.selectedVariant) {
+                this.quantity = 1;
+            } else {
+                this.quantity = Math.min(this.quantity, this.maxQuantity);
             }
 
             if (submit) {
