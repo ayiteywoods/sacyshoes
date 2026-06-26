@@ -182,9 +182,14 @@
             const size = radio.value;
             const inStock = isSizeInStock(size);
             const selected = optionEquals(state.selectedSize, size);
+            const label = radio.nextElementSibling;
 
             radio.disabled = !inStock;
             radio.checked = inStock && selected;
+
+            if (label) {
+                label.classList.toggle('is-selected', inStock && selected);
+            }
         });
     }
 

@@ -71,11 +71,11 @@
                             id="{{ $sizeInputId }}"
                             value="{{ $size }}"
                             data-variant-size-radio
-                            class="variant-size-radio sr-only"
+                            class="variant-size-radio peer sr-only"
                         >
                         <label
                             for="{{ $sizeInputId }}"
-                            class="variant-size-option variant-size-option--available min-w-[3rem] border px-3 py-2 text-sm transition"
+                            class="variant-size-option variant-size-option--available min-w-[3rem] border px-3 py-2 text-sm transition peer-checked:border-brand-red peer-checked:bg-brand-red peer-checked:text-white"
                         >{{ $size }}</label>
                     </span>
                 @else

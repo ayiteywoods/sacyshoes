@@ -466,8 +466,10 @@
     }
 
     .variant-size-radio:checked + .variant-size-option--available,
-    .variant-size-option.is-selected {
-        @apply border-brand-red bg-brand-red text-white;
+    .variant-size-option.variant-size-option--available.is-selected {
+        border-color: var(--color-brand-red);
+        background-color: var(--color-brand-red);
+        color: #fff;
     }
 
     .variant-size-radio:focus-visible + .variant-size-option--available {
