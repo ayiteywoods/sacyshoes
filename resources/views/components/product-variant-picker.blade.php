@@ -15,11 +15,10 @@
     $initialSize = old('variant_size');
     $initialColor = old('variant_color');
     $initialHeel = old('variant_heel');
-    $colorMap = config('shop.product_color_map', []);
 @endphp
 
 <div
-    x-data="productVariantPicker(@js($variants), @js($colorMap), @js($initialSize), @js($initialColor), @js($initialHeel))"
+    x-data="productVariantPicker(@js($variants), @js($initialSize), @js($initialColor), @js($initialHeel))"
     x-init="syncQuantityInput()"
     class="space-y-5"
 >
@@ -41,24 +40,17 @@
     <div>
         <div class="flex items-center gap-4">
             <label for="variant-color" class="shrink-0 text-sm lowercase text-brand-muted">color</label>
-            <div class="flex flex-1 items-center gap-3">
-                <span
-                    class="h-8 w-8 shrink-0 border border-neutral-300"
-                    :style="{ backgroundColor: colorCss(selectedColor) }"
-                    aria-hidden="true"
-                ></span>
-                <select
-                    id="variant-color"
-                    class="input-field mt-0 flex-1"
-                    :value="selectedColor ?? ''"
-                    @change="selectColor($event.target.value || null)"
-                >
-                    <option value="">Select color</option>
-                    <template x-for="color in availableColors" :key="color">
-                        <option :value="color" x-text="color"></option>
-                    </template>
-                </select>
-            </div>
+            <select
+                id="variant-color"
+                class="input-field mt-0 w-full max-w-[9rem]"
+                :value="selectedColor ?? ''"
+                @change="selectColor($event.target.value || null)"
+            >
+                <option value="">Select color</option>
+                <template x-for="color in availableColors" :key="color">
+                    <option :value="color" x-text="color"></option>
+                </template>
+            </select>
         </div>
     </div>
 
@@ -84,4 +76,47 @@
     <input type="hidden" name="variant_heel" :value="selectedVariant && selectedVariant.heel_length ? selectedVariant.heel_length : ''">
 
     <p class="text-sm" x-show="selectionMessage" x-text="selectionMessage" :class="selectedVariant ? 'text-brand-black' : 'text-brand-muted'"></p>
+
+    <div class="flex flex-col gap-4 pt-2">
+        <div class="flex items-center gap-3">
+            <span class="text-sm uppercase tracking-wide text-brand-muted">Qty</span>
+            <div class="flex items-stretch">
+                <button
+                    type="button"
+                    class="flex h-10 w-10 items-center justify-center border border-neutral-300 bg-white text-lg leading-none transition hover:border-brand-red disabled:cursor-not-allowed disabled:opacity-50"
+                    @click="adjustQuantity(-1)"
+                    :disabled="!selectedVariant || quantity <= 1"
+                    aria-label="Decrease quantity"
+                >−</button>
+                <input
+                    id="quantity"
+                    type="number"
+                    name="quantity"
+                    min="1"
+                    max="1"
+                    value="1"
+                    class="input-field mt-0 h-10 w-14 rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    disabled
+                    readonly
+                >
+                <button
+                    type="button"
+                    class="flex h-10 w-10 items-center justify-center border border-neutral-300 bg-white text-lg leading-none transition hover:border-brand-red disabled:cursor-not-allowed disabled:opacity-50"
+                    @click="adjustQuantity(1)"
+                    :disabled="!selectedVariant || quantity >= maxQuantity"
+                    aria-label="Increase quantity"
+                >+</button>
+            </div>
+        </div>
+
+        <button
+            id="add-to-cart"
+            type="submit"
+            data-out-of-stock="{{ $product->isInStock() ? 'false' : 'true' }}"
+            class="btn-primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
+            @disabled(! $product->isInStock())
+        >
+            {{ $product->isInStock() ? 'Add To Cart' : 'Out of Stock' }}
+        </button>
+    </div>
 </div>

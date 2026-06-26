@@ -51,31 +51,6 @@
                         @endif
 
                         <x-product-variant-picker :product="$product" />
-
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                            <div class="flex items-center gap-3">
-                                <label for="quantity" class="text-sm uppercase tracking-wide text-brand-muted">Qty</label>
-                                <input
-                                    id="quantity"
-                                    type="number"
-                                    name="quantity"
-                                    min="1"
-                                    max="1"
-                                    value="1"
-                                    class="input-field w-20"
-                                    disabled
-                                >
-                            </div>
-                            <button
-                                id="add-to-cart"
-                                type="submit"
-                                data-out-of-stock="{{ $product->isInStock() ? 'false' : 'true' }}"
-                                class="btn-primary w-full py-3 sm:flex-1 disabled:cursor-not-allowed disabled:opacity-50"
-                                @disabled(! $product->isInStock())
-                            >
-                                {{ $product->isInStock() ? 'Add To Cart' : 'Out of Stock' }}
-                            </button>
-                        </div>
                     </form>
                 @else
                     <div class="mt-8 border-t border-neutral-200 pt-8 text-sm text-brand-muted">
