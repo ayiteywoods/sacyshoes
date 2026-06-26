@@ -47,6 +47,40 @@
     ];
 @endphp
 
+<style>
+    #{{ $pickerId }} .variant-size-option--available {
+        display: inline-flex;
+        min-width: 3rem;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #a3a3a3;
+        background-color: #fff;
+        color: #111;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        cursor: pointer;
+        transition: border-color 150ms, background-color 150ms, color 150ms;
+    }
+
+    #{{ $pickerId }} .variant-size-radio:checked + .variant-size-option--available,
+    #{{ $pickerId }} .variant-size-option--available.is-selected {
+        border-color: #e10600 !important;
+        background-color: #e10600 !important;
+        color: #fff !important;
+    }
+
+    #{{ $pickerId }} .variant-size-option--available:hover {
+        border-color: #e10600;
+    }
+
+    #{{ $pickerId }} .variant-size-radio:checked + .variant-size-option--available:hover,
+    #{{ $pickerId }} .variant-size-option--available.is-selected:hover {
+        background-color: #e10600 !important;
+        color: #fff !important;
+    }
+</style>
+
 <div
     id="{{ $pickerId }}"
     class="product-variant-picker space-y-5"
@@ -75,7 +109,7 @@
                         >
                         <label
                             for="{{ $sizeInputId }}"
-                            class="variant-size-option variant-size-option--available min-w-[3rem] border px-3 py-2 text-sm transition peer-checked:border-brand-red peer-checked:bg-brand-red peer-checked:text-white"
+                            class="variant-size-option variant-size-option--available"
                         >{{ $size }}</label>
                     </span>
                 @else

@@ -183,13 +183,19 @@
             const inStock = isSizeInStock(size);
             const selected = optionEquals(state.selectedSize, size);
             const label = radio.nextElementSibling;
+            const isActive = inStock && selected;
 
             radio.disabled = !inStock;
-            radio.checked = inStock && selected;
+            radio.checked = isActive;
 
-            if (label) {
-                label.classList.toggle('is-selected', inStock && selected);
+            if (!label) {
+                return;
             }
+
+            label.classList.toggle('is-selected', isActive);
+            label.style.borderColor = isActive ? '#e10600' : '';
+            label.style.backgroundColor = isActive ? '#e10600' : '';
+            label.style.color = isActive ? '#ffffff' : '';
         });
     }
 
@@ -328,6 +334,20 @@
     root.addEventListener('change', (event) => {
         if (event.target.matches('[data-variant-size-radio]')) {
             selectSize(event.target.value);
+
+            root.querySelectorAll('[data-variant-size-radio]').forEach((radio) => {
+                const label = radio.nextElementSibling;
+                const isActive = radio === event.target;
+
+                if (!label) {
+                    return;
+                }
+
+                label.classList.toggle('is-selected', isActive);
+                label.style.borderColor = isActive ? '#e10600' : '';
+                label.style.backgroundColor = isActive ? '#e10600' : '';
+                label.style.color = isActive ? '#ffffff' : '';
+            });
         }
     });
 
