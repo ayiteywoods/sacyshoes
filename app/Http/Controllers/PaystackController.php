@@ -125,15 +125,6 @@ class PaystackController extends Controller
             return $latestPayment->reference;
         }
 
-        $failedAttempts = Payment::query()
-            ->where('order_id', $order->id)
-            ->where('status', PaymentStatus::Failed)
-            ->count();
-
-        if ($failedAttempts === 0) {
-            return (string) $order->order_number;
-        }
-
-        return $order->order_number.'-'.($failedAttempts + 1);
+        return $order->order_number.'_'.time();
     }
 }
