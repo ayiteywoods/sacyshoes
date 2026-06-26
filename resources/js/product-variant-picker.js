@@ -1,14 +1,23 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('productVariantPicker', (
         variants = [],
+        sizeOptions = [],
         initialSize = null,
         initialColor = null,
         initialHeel = null,
     ) => ({
         variants,
+        sizeOptions,
         selectedSize: initialSize,
         selectedColor: initialColor,
         selectedHeel: initialHeel,
+        init() {
+            if (this.selectedSize && ! this.isSizeInStock(this.selectedSize)) {
+                this.selectedSize = null;
+            }
+
+            this.syncQuantityInput();
+        },
         normalizeOption(value) {
             return value == null ? '' : String(value).trim().toLowerCase();
         },
@@ -20,36 +29,19 @@ document.addEventListener('alpine:init', () => {
 
             return heel !== '' && heel.toLowerCase() !== 'flat';
         },
-        get allSizes() {
-            const seen = new Set();
-            const sizes = [];
-
-            for (const variant of this.variants) {
-                const key = this.normalizeOption(variant.size);
-
-                if (! key || seen.has(key)) {
-                    continue;
-                }
-
-                seen.add(key);
-                sizes.push(variant.size);
-            }
-
-            return sizes.sort((left, right) => {
-                const leftNumber = Number(left);
-                const rightNumber = Number(right);
-
-                if (! Number.isNaN(leftNumber) && ! Number.isNaN(rightNumber)) {
-                    return leftNumber - rightNumber;
-                }
-
-                return String(left).localeCompare(String(right));
-            });
-        },
         isSizeInStock(size) {
             return this.variants.some((variant) =>
                 this.optionEquals(variant.size, size) && variant.quantity > 0,
             );
+        },
+        sizeButtonClass(size) {
+            if (! this.isSizeInStock(size)) {
+                return 'variant-size-option--unavailable border-neutral-900 bg-white text-brand-black';
+            }
+
+            return this.optionEquals(this.selectedSize, size)
+                ? 'border-brand-red bg-brand-red text-white'
+                : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red';
         },
         get inStockVariants() {
             return this.variants.filter((variant) => variant.quantity > 0);

@@ -12,34 +12,54 @@
         ])
         ->values();
 
+    $allSizes = [];
+    $seenSizes = [];
+
+    foreach ($variants as $variant) {
+        $size = (string) ($variant['size'] ?? '');
+        $key = strtolower(trim($size));
+
+        if ($key === '' || isset($seenSizes[$key])) {
+            continue;
+        }
+
+        $seenSizes[$key] = true;
+        $allSizes[] = $size;
+    }
+
+    usort($allSizes, function (string $left, string $right): int {
+        if (is_numeric($left) && is_numeric($right)) {
+            return (float) $left <=> (float) $right;
+        }
+
+        return strnatcasecmp($left, $right);
+    });
+
     $initialSize = old('variant_size');
     $initialColor = old('variant_color');
     $initialHeel = old('variant_heel');
 @endphp
 
 <div
-    x-data="productVariantPicker(@js($variants), @js($initialSize), @js($initialColor), @js($initialHeel))"
-    x-init="if (selectedSize && ! isSizeInStock(selectedSize)) { selectedSize = null; } syncQuantityInput()"
+    x-data="productVariantPicker(@js($variants), @js($allSizes), @js($initialSize), @js($initialColor), @js($initialHeel))"
+    x-init="init()"
     class="space-y-5"
 >
     <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
         <div class="mt-3 flex flex-wrap gap-2">
-            <template x-for="size in allSizes" :key="size">
+            @forelse ($allSizes as $size)
                 <button
                     type="button"
                     class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition"
-                    :class="isSizeInStock(size)
-                        ? (optionEquals(selectedSize, size)
-                            ? 'border-brand-red bg-brand-red text-white'
-                            : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red')
-                        : 'variant-size-option--unavailable border-neutral-900 bg-white text-brand-black'"
-                    :disabled="! isSizeInStock(size)"
-                    :aria-disabled="! isSizeInStock(size)"
-                    @click="selectSize(size)"
-                    x-text="size"
-                ></button>
-            </template>
+                    :class="sizeButtonClass(@js($size))"
+                    :disabled="! isSizeInStock(@js($size))"
+                    :aria-disabled="! isSizeInStock(@js($size))"
+                    @click="selectSize(@js($size))"
+                >{{ $size }}</button>
+            @empty
+                <p class="text-sm text-brand-muted">No sizes configured for this product.</p>
+            @endforelse
         </div>
     </div>
 
