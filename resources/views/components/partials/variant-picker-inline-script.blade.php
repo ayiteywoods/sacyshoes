@@ -1,47 +1,16 @@
-function normalizeOption(value) {
-    return value == null ? '' : String(value).trim().toLowerCase();
-}
+@props(['pickerId', 'pickerConfig'])
 
-function optionEquals(left, right) {
-    return normalizeOption(left) === normalizeOption(right);
-}
+<script>
+(function () {
+    const root = document.getElementById(@json($pickerId));
 
-function hasHeel(variant) {
-    const heel = variant.heel_length ? String(variant.heel_length).trim() : '';
-
-    return heel !== '' && heel.toLowerCase() !== 'flat';
-}
-
-function readPickerConfig(root) {
-    const configEl = root.querySelector('[data-variant-picker-config]');
-
-    if (configEl?.textContent?.trim()) {
-        try {
-            return JSON.parse(configEl.textContent);
-        } catch (error) {
-            console.error('Variant picker: invalid config JSON', error);
-        }
-    }
-
-    if (root.dataset.config) {
-        try {
-            return JSON.parse(root.dataset.config);
-        } catch (error) {
-            console.error('Variant picker: invalid data-config', error);
-        }
-    }
-
-    return {};
-}
-
-function initProductVariantPicker(root) {
-    if (root.dataset.variantPickerReady === 'true') {
+    if (!root || root.dataset.variantPickerReady === 'true') {
         return;
     }
 
     root.dataset.variantPickerReady = 'true';
 
-    const config = readPickerConfig(root);
+    const config = @json($pickerConfig);
     const variants = config.variants || [];
     const state = {
         selectedSize: config.initialSize || null,
@@ -61,6 +30,20 @@ function initProductVariantPicker(root) {
         quantityInput: root.querySelector('[data-variant-quantity]'),
         submit: root.querySelector('[data-variant-submit]'),
     };
+
+    function normalizeOption(value) {
+        return value == null ? '' : String(value).trim().toLowerCase();
+    }
+
+    function optionEquals(left, right) {
+        return normalizeOption(left) === normalizeOption(right);
+    }
+
+    function hasHeel(variant) {
+        const heel = variant.heel_length ? String(variant.heel_length).trim() : '';
+
+        return heel !== '' && heel.toLowerCase() !== 'flat';
+    }
 
     function inStockVariants() {
         return variants.filter((variant) => variant.quantity > 0);
@@ -194,17 +177,14 @@ function initProductVariantPicker(root) {
             : 'Choose your size and color.';
     }
 
-    function renderSizeButtons() {
-        root.querySelectorAll('[data-variant-size]').forEach((button) => {
-            const size = button.dataset.variantSize;
+    function renderSizeRadios() {
+        root.querySelectorAll('[data-variant-size-radio]').forEach((radio) => {
+            const size = radio.value;
             const inStock = isSizeInStock(size);
             const selected = optionEquals(state.selectedSize, size);
 
-            button.disabled = !inStock;
-            button.setAttribute('aria-pressed', inStock && selected ? 'true' : 'false');
-            button.classList.toggle('is-selected', inStock && selected);
-            button.classList.toggle('variant-size-option--unavailable', !inStock);
-            button.classList.toggle('variant-size-option--available', inStock);
+            radio.disabled = !inStock;
+            radio.checked = inStock && selected;
         });
     }
 
@@ -268,7 +248,7 @@ function initProductVariantPicker(root) {
     }
 
     function render() {
-        renderSizeButtons();
+        renderSizeRadios();
         renderColors();
         renderHeels();
 
@@ -340,16 +320,13 @@ function initProductVariantPicker(root) {
         render();
     }
 
-    root.addEventListener('click', (event) => {
-        const sizeButton = event.target.closest('[data-variant-size]');
-
-        if (sizeButton && root.contains(sizeButton)) {
-            event.preventDefault();
-            selectSize(sizeButton.dataset.variantSize);
-
-            return;
+    root.addEventListener('change', (event) => {
+        if (event.target.matches('[data-variant-size-radio]')) {
+            selectSize(event.target.value);
         }
+    });
 
+    root.addEventListener('click', (event) => {
         if (event.target.closest('[data-variant-quantity-decrease]')) {
             event.preventDefault();
 
@@ -386,14 +363,5 @@ function initProductVariantPicker(root) {
     }
 
     render();
-}
-
-function bootProductVariantPickers() {
-    document.querySelectorAll('[data-product-variant-picker]').forEach(initProductVariantPicker);
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootProductVariantPickers);
-} else {
-    bootProductVariantPickers();
-}
+})();
+</script>

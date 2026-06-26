@@ -4,7 +4,6 @@ import Alpine from 'alpinejs';
 import './admin-confirm.js';
 import './admin-table.js';
 import './checkout-shipping.js';
-import './product-variant-picker.js';
 import './load-more-products.js';
 
 window.Alpine = Alpine;

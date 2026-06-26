@@ -465,8 +465,13 @@
         @apply border-neutral-300 bg-white text-brand-black hover:border-brand-red;
     }
 
+    .variant-size-radio:checked + .variant-size-option--available,
     .variant-size-option.is-selected {
         @apply border-brand-red bg-brand-red text-white;
+    }
+
+    .variant-size-radio:focus-visible + .variant-size-option--available {
+        @apply ring-2 ring-brand-red ring-offset-2;
     }
 
     .variant-size-option--unavailable {

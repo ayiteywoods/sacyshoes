@@ -9,7 +9,6 @@ use App\Models\ShippingRegion;
 use App\Services\AdminNotificationService;
 use App\Services\CheckoutService;
 use App\Services\CouponService;
-use App\Services\OrderNotificationService;
 use App\Support\GuestOrderAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -118,7 +117,6 @@ class CheckoutController extends Controller
 
         GuestOrderAccess::remember($order);
 
-        app(OrderNotificationService::class)->orderCreated($order);
         app(AdminNotificationService::class)->sync();
 
         return redirect()->to(GuestOrderAccess::paystackInitializeUrl($order));

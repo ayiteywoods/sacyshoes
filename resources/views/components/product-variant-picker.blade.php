@@ -1,6 +1,10 @@
 @props(['product'])
 
 @php
+    use Illuminate\Support\Str;
+
+    $pickerId = 'product-variant-picker-'.$product->id;
+
     $variants = $product->variants
         ->map(fn ($variant) => [
             'id' => $variant->id,
@@ -36,7 +40,7 @@
     });
 
     $pickerConfig = [
-        'variants' => $variants,
+        'variants' => $variants->values()->all(),
         'initialSize' => old('variant_size'),
         'initialColor' => old('variant_color'),
         'initialHeel' => old('variant_heel'),
@@ -44,9 +48,9 @@
 @endphp
 
 <div
+    id="{{ $pickerId }}"
     class="product-variant-picker space-y-5"
     data-product-variant-picker
-    data-config='@json($pickerConfig)'
 >
     <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
@@ -57,13 +61,29 @@
                         fn (array $variant) => strcasecmp(trim((string) $variant['size']), trim($size)) === 0
                             && $variant['quantity'] > 0,
                     );
+                    $sizeInputId = $pickerId.'-'.Str::slug($size);
                 @endphp
-                <button
-                    type="button"
-                    data-variant-size="{{ $size }}"
-                    class="variant-size-option variant-size-option--{{ $sizeInStock ? 'available' : 'unavailable' }} min-w-[3rem] border px-3 py-2 text-sm transition"
-                    @unless ($sizeInStock) disabled @endunless
-                >{{ $size }}</button>
+                @if ($sizeInStock)
+                    <span class="inline-flex">
+                        <input
+                            type="radio"
+                            name="{{ $pickerId }}-size"
+                            id="{{ $sizeInputId }}"
+                            value="{{ $size }}"
+                            data-variant-size-radio
+                            class="variant-size-radio sr-only"
+                        >
+                        <label
+                            for="{{ $sizeInputId }}"
+                            class="variant-size-option variant-size-option--available min-w-[3rem] border px-3 py-2 text-sm transition"
+                        >{{ $size }}</label>
+                    </span>
+                @else
+                    <span
+                        class="variant-size-option variant-size-option--unavailable inline-flex min-w-[3rem] border px-3 py-2 text-sm"
+                        aria-disabled="true"
+                    >{{ $size }}</span>
+                @endif
             @empty
                 <p class="text-sm text-brand-muted">No sizes configured for this product.</p>
             @endforelse
@@ -72,9 +92,9 @@
 
     <div>
         <div class="flex items-center gap-4">
-            <label for="variant-color" class="shrink-0 text-sm lowercase text-brand-muted">color</label>
+            <label for="variant-color-{{ $product->id }}" class="shrink-0 text-sm lowercase text-brand-muted">color</label>
             <select
-                id="variant-color"
+                id="variant-color-{{ $product->id }}"
                 data-variant-color
                 class="input-field mt-0 w-full max-w-[9rem]"
             >
@@ -108,7 +128,7 @@
                     disabled
                 >−</button>
                 <input
-                    id="quantity"
+                    id="quantity-{{ $product->id }}"
                     type="number"
                     name="quantity"
                     min="1"
@@ -140,3 +160,8 @@
         </button>
     </div>
 </div>
+
+@include('components.partials.variant-picker-inline-script', [
+    'pickerId' => $pickerId,
+    'pickerConfig' => $pickerConfig,
+])
