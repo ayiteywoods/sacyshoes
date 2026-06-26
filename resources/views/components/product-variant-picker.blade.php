@@ -57,11 +57,11 @@
                 @endphp
                 <button
                     type="button"
-                    class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition {{ $sizeInStock ? 'border-neutral-300 bg-white text-brand-black' : 'variant-size-option--unavailable border-neutral-900 bg-white text-brand-black' }}"
+                    class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition"
                     :class="sizeButtonClass(sizeOptions[{{ $index }}])"
                     :disabled="! isSizeInStock(sizeOptions[{{ $index }}])"
                     :aria-disabled="! isSizeInStock(sizeOptions[{{ $index }}])"
-                    @click="selectSize(sizeOptions[{{ $index }}])"
+                    @click.prevent="selectSize(sizeOptions[{{ $index }}])"
                     @unless ($sizeInStock) disabled @endunless
                 >{{ $size }}</button>
             @empty
@@ -76,8 +76,8 @@
             <select
                 id="variant-color"
                 class="input-field mt-0 w-full max-w-[9rem]"
-                :value="selectedColor ?? ''"
-                @change="selectColor($event.target.value || null)"
+                x-model="selectedColor"
+                @change="onColorChange()"
             >
                 <option value="">Select color</option>
                 <template x-for="color in availableColors" :key="color">
@@ -117,8 +117,8 @@
                 <button
                     type="button"
                     class="flex h-10 w-10 items-center justify-center border border-neutral-300 bg-white text-lg leading-none transition hover:border-brand-red disabled:cursor-not-allowed disabled:opacity-50"
-                    @click="adjustQuantity(-1)"
-                    :disabled="!selectedVariant || quantity <= 1"
+                    @click.prevent="adjustQuantity(-1)"
+                    :disabled="!canChangeQuantity || quantity <= 1"
                     aria-label="Decrease quantity"
                 >−</button>
                 <input
@@ -127,16 +127,16 @@
                     name="quantity"
                     min="1"
                     x-model.number="quantity"
-                    :max="maxQuantity"
+                    :max="quantityCap"
                     class="input-field mt-0 h-10 w-14 rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    :disabled="!selectedVariant"
+                    :disabled="!canChangeQuantity"
                     readonly
                 >
                 <button
                     type="button"
                     class="flex h-10 w-10 items-center justify-center border border-neutral-300 bg-white text-lg leading-none transition hover:border-brand-red disabled:cursor-not-allowed disabled:opacity-50"
-                    @click="adjustQuantity(1)"
-                    :disabled="!selectedVariant || quantity >= maxQuantity"
+                    @click.prevent="adjustQuantity(1)"
+                    :disabled="!canChangeQuantity || quantity >= quantityCap"
                     aria-label="Increase quantity"
                 >+</button>
             </div>

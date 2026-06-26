@@ -37,11 +37,11 @@ document.addEventListener('alpine:init', () => {
         },
         sizeButtonClass(size) {
             if (! this.isSizeInStock(size)) {
-                return 'variant-size-option--unavailable border-neutral-900 bg-white text-brand-black';
+                return 'variant-size-option--unavailable cursor-not-allowed border-neutral-900 bg-white text-brand-black';
             }
 
             return this.optionEquals(this.selectedSize, size)
-                ? 'border-brand-red bg-brand-red text-white'
+                ? '!border-brand-red !bg-brand-red !text-white'
                 : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red';
         },
         get inStockVariants() {
@@ -144,21 +144,42 @@ document.addEventListener('alpine:init', () => {
                 : 'Choose your size and color.';
         },
         get maxQuantity() {
-            return this.selectedVariant?.quantity ?? 1;
+            return this.quantityCap;
+        },
+        get quantityCap() {
+            if (this.selectedVariant) {
+                return this.selectedVariant.quantity;
+            }
+
+            const matches = this.matchingVariants;
+
+            if (matches.length > 0) {
+                return Math.max(...matches.map((variant) => variant.quantity));
+            }
+
+            return 0;
+        },
+        get canChangeQuantity() {
+            return this.selectedSize && this.selectedColor && this.quantityCap > 0;
         },
         selectSize(size) {
             if (! this.isSizeInStock(size)) {
                 return;
             }
 
-            this.selectedSize = this.optionEquals(this.selectedSize, size) ? null : size;
+            this.selectedSize = size;
             this.selectedColor = null;
             this.selectedHeel = null;
 
-            if (this.selectedSize && this.availableColors.length === 1) {
+            if (this.availableColors.length === 1) {
                 this.selectedColor = this.availableColors[0];
             }
 
+            this.syncQuantityInput();
+        },
+        onColorChange() {
+            this.selectedColor = this.selectedColor || null;
+            this.selectedHeel = null;
             this.syncQuantityInput();
         },
         selectColor(color) {
@@ -171,22 +192,22 @@ document.addEventListener('alpine:init', () => {
             this.syncQuantityInput();
         },
         adjustQuantity(delta) {
-            if (! this.selectedVariant) {
+            if (! this.canChangeQuantity) {
                 return;
             }
 
             this.quantity = Math.min(
                 Math.max(this.quantity + delta, 1),
-                this.maxQuantity,
+                this.quantityCap,
             );
         },
         syncQuantityInput() {
             const submit = document.getElementById('add-to-cart');
 
-            if (! this.selectedVariant) {
+            if (! this.canChangeQuantity) {
                 this.quantity = 1;
             } else {
-                this.quantity = Math.min(this.quantity, this.maxQuantity);
+                this.quantity = Math.min(this.quantity, this.quantityCap);
             }
 
             if (submit) {
