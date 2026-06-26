@@ -176,6 +176,11 @@ class Order extends Model
         return (string) config('shop.payment_method_label');
     }
 
+    public function invoicePaymentMethodLabel(): string
+    {
+        return str_replace(' Or ', ' / ', $this->paymentMethodLabel());
+    }
+
     public function invoiceShippingLabel(): string
     {
         if ((float) $this->shipping_fee > 0) {

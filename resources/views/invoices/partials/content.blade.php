@@ -6,9 +6,9 @@
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:760px;border-collapse:collapse;margin:0 auto;table-layout:fixed;">
     <colgroup>
-        <col style="width:33%;">
-        <col style="width:33%;">
-        <col style="width:34%;">
+        <col style="width:28%;">
+        <col style="width:28%;">
+        <col style="width:44%;">
     </colgroup>
 
     <tr>
@@ -47,27 +47,31 @@
             <div>{{ $order->shipping_city }}, {{ $order->shipping_country }}</div>
             <div style="margin-top:8px;">{{ $order->shipping_phone }}</div>
         </td>
-        <td style="padding:0 0 24px 16px;vertical-align:top;font-size:13px;line-height:1.8;word-wrap:break-word;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;line-height:1.8;">
+        <td style="padding:0 0 24px 12px;vertical-align:top;font-size:13px;line-height:1.6;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;line-height:1.6;">
+                <colgroup>
+                    <col style="width:42%;">
+                    <col style="width:58%;">
+                </colgroup>
                 <tr>
-                    <td style="padding:2px 12px 2px 0;vertical-align:top;white-space:nowrap;font-weight:700;">Invoice Number:</td>
-                    <td style="padding:2px 0;vertical-align:top;">{{ $order->invoiceNumber() }}</td>
+                    <td style="padding:3px 10px 3px 0;vertical-align:top;font-weight:700;text-align:right;">Invoice Number:</td>
+                    <td style="padding:3px 0;vertical-align:top;">{{ $order->invoiceNumber() }}</td>
                 </tr>
                 <tr>
-                    <td style="padding:2px 12px 2px 0;vertical-align:top;white-space:nowrap;font-weight:700;">Invoice Date:</td>
-                    <td style="padding:2px 0;vertical-align:top;">{{ $order->invoiceDate()->format('F j, Y') }}</td>
+                    <td style="padding:3px 10px 3px 0;vertical-align:top;font-weight:700;text-align:right;">Invoice Date:</td>
+                    <td style="padding:3px 0;vertical-align:top;">{{ $order->invoiceDate()->format('F j, Y') }}</td>
                 </tr>
                 <tr>
-                    <td style="padding:2px 12px 2px 0;vertical-align:top;white-space:nowrap;font-weight:700;">Order Number:</td>
-                    <td style="padding:2px 0;vertical-align:top;">{{ $order->order_number }}</td>
+                    <td style="padding:3px 10px 3px 0;vertical-align:top;font-weight:700;text-align:right;">Order Number:</td>
+                    <td style="padding:3px 0;vertical-align:top;">{{ $order->order_number }}</td>
                 </tr>
                 <tr>
-                    <td style="padding:2px 12px 2px 0;vertical-align:top;white-space:nowrap;font-weight:700;">Order Date:</td>
-                    <td style="padding:2px 0;vertical-align:top;">{{ $order->created_at->format('F j, Y') }}</td>
+                    <td style="padding:3px 10px 3px 0;vertical-align:top;font-weight:700;text-align:right;">Order Date:</td>
+                    <td style="padding:3px 0;vertical-align:top;">{{ $order->created_at->format('F j, Y') }}</td>
                 </tr>
                 <tr>
-                    <td style="padding:2px 12px 2px 0;vertical-align:top;white-space:nowrap;font-weight:700;">Payment Method:</td>
-                    <td style="padding:2px 0;vertical-align:top;">{{ $order->paymentMethodLabel() }}</td>
+                    <td style="padding:3px 10px 3px 0;vertical-align:top;font-weight:700;text-align:right;">Payment Method:</td>
+                    <td style="padding:3px 0;vertical-align:top;line-height:1.45;">{{ $order->invoicePaymentMethodLabel() }}</td>
                 </tr>
             </table>
         </td>
