@@ -458,11 +458,23 @@
     }
 
     .variant-size-option {
-        @apply relative overflow-hidden;
+        @apply relative overflow-hidden cursor-pointer;
+    }
+
+    .variant-size-option--available {
+        @apply border-neutral-300 bg-white text-brand-black hover:border-brand-red;
+    }
+
+    .variant-size-option.is-selected {
+        @apply border-brand-red bg-brand-red text-white;
     }
 
     .variant-size-option--unavailable {
-        @apply cursor-not-allowed;
+        @apply cursor-not-allowed border-neutral-900 bg-white text-brand-black;
+    }
+
+    .variant-heel-option.is-selected {
+        @apply border-brand-red bg-brand-red text-white;
     }
 
     .variant-size-option--unavailable::after {

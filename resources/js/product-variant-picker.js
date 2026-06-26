@@ -1,218 +1,364 @@
-document.addEventListener('alpine:init', () => {
-    Alpine.data('productVariantPicker', (
-        variants = [],
-        sizeOptions = [],
-        initialSize = null,
-        initialColor = null,
-        initialHeel = null,
-    ) => ({
-        variants,
-        sizeOptions,
-        selectedSize: initialSize,
-        selectedColor: initialColor,
-        selectedHeel: initialHeel,
+function normalizeOption(value) {
+    return value == null ? '' : String(value).trim().toLowerCase();
+}
+
+function optionEquals(left, right) {
+    return normalizeOption(left) === normalizeOption(right);
+}
+
+function hasHeel(variant) {
+    const heel = variant.heel_length ? String(variant.heel_length).trim() : '';
+
+    return heel !== '' && heel.toLowerCase() !== 'flat';
+}
+
+function initProductVariantPicker(root) {
+    const config = JSON.parse(root.dataset.config || '{}');
+    const variants = config.variants || [];
+    const state = {
+        selectedSize: config.initialSize || null,
+        selectedColor: config.initialColor || null,
+        selectedHeel: config.initialHeel || null,
         quantity: 1,
-        init() {
-            if (this.selectedSize && ! this.isSizeInStock(this.selectedSize)) {
-                this.selectedSize = null;
-            }
+    };
 
-            this.syncQuantityInput();
-        },
-        normalizeOption(value) {
-            return value == null ? '' : String(value).trim().toLowerCase();
-        },
-        optionEquals(left, right) {
-            return this.normalizeOption(left) === this.normalizeOption(right);
-        },
-        hasHeel(variant) {
-            const heel = variant.heel_length ? String(variant.heel_length).trim() : '';
+    const els = {
+        sizeButtons: root.querySelectorAll('[data-variant-size]'),
+        colorSelect: root.querySelector('[data-variant-color]'),
+        heelSection: root.querySelector('[data-variant-heel-section]'),
+        heelButtons: root.querySelector('[data-variant-heel-buttons]'),
+        sizeInput: root.querySelector('[data-variant-size-input]'),
+        colorInput: root.querySelector('[data-variant-color-input]'),
+        heelInput: root.querySelector('[data-variant-heel-input]'),
+        message: root.querySelector('[data-variant-message]'),
+        quantityInput: root.querySelector('[data-variant-quantity]'),
+        quantityDecrease: root.querySelector('[data-variant-quantity-decrease]'),
+        quantityIncrease: root.querySelector('[data-variant-quantity-increase]'),
+        submit: root.querySelector('[data-variant-submit]'),
+    };
 
-            return heel !== '' && heel.toLowerCase() !== 'flat';
-        },
-        isSizeInStock(size) {
-            return this.variants.some((variant) =>
-                this.optionEquals(variant.size, size) && variant.quantity > 0,
-            );
-        },
-        sizeButtonClass(size) {
-            if (! this.isSizeInStock(size)) {
-                return 'variant-size-option--unavailable cursor-not-allowed border-neutral-900 bg-white text-brand-black';
-            }
+    function inStockVariants() {
+        return variants.filter((variant) => variant.quantity > 0);
+    }
 
-            return this.optionEquals(this.selectedSize, size)
-                ? '!border-brand-red !bg-brand-red !text-white'
-                : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red';
-        },
-        get inStockVariants() {
-            return this.variants.filter((variant) => variant.quantity > 0);
-        },
-        get showHeelSection() {
-            return this.inStockVariants.some((variant) => this.hasHeel(variant));
-        },
-        get availableColors() {
-            const seen = new Set();
+    function isSizeInStock(size) {
+        return variants.some((variant) => optionEquals(variant.size, size) && variant.quantity > 0);
+    }
 
-            return this.inStockVariants
-                .filter((variant) => !this.selectedSize || this.optionEquals(variant.size, this.selectedSize))
-                .map((variant) => variant.color)
-                .filter((color) => {
-                    const key = this.normalizeOption(color);
+    function showHeelSection() {
+        return inStockVariants().some((variant) => hasHeel(variant));
+    }
 
-                    if (! key || seen.has(key)) {
+    function availableColors() {
+        const seen = new Set();
+
+        return inStockVariants()
+            .filter((variant) => !state.selectedSize || optionEquals(variant.size, state.selectedSize))
+            .map((variant) => variant.color)
+            .filter((color) => {
+                const key = normalizeOption(color);
+
+                if (!key || seen.has(key)) {
+                    return false;
+                }
+
+                seen.add(key);
+
+                return true;
+            });
+    }
+
+    function availableHeels() {
+        return [...new Set(
+            inStockVariants()
+                .filter((variant) => {
+                    if (state.selectedSize && !optionEquals(variant.size, state.selectedSize)) {
                         return false;
                     }
 
-                    seen.add(key);
+                    if (state.selectedColor && !optionEquals(variant.color, state.selectedColor)) {
+                        return false;
+                    }
 
-                    return true;
-                });
-        },
-        get availableHeels() {
-            return [...new Set(
-                this.inStockVariants
-                    .filter((variant) => {
-                        if (this.selectedSize && !this.optionEquals(variant.size, this.selectedSize)) {
-                            return false;
-                        }
+                    return hasHeel(variant);
+                })
+                .map((variant) => variant.heel_length),
+        )];
+    }
 
-                        if (this.selectedColor && !this.optionEquals(variant.color, this.selectedColor)) {
-                            return false;
-                        }
+    function matchingVariants() {
+        if (!state.selectedSize || !state.selectedColor) {
+            return [];
+        }
 
-                        return this.hasHeel(variant);
-                    })
-                    .map((variant) => variant.heel_length),
-            )];
-        },
-        get matchingVariants() {
-            if (!this.selectedSize || !this.selectedColor) {
-                return [];
-            }
+        return inStockVariants().filter((variant) =>
+            optionEquals(variant.size, state.selectedSize)
+            && optionEquals(variant.color, state.selectedColor),
+        );
+    }
 
-            return this.inStockVariants.filter((variant) =>
-                this.optionEquals(variant.size, this.selectedSize)
-                && this.optionEquals(variant.color, this.selectedColor),
-            );
-        },
-        get selectedVariant() {
-            const candidates = this.matchingVariants;
+    function selectedVariant() {
+        const candidates = matchingVariants();
 
-            if (candidates.length === 0) {
-                return null;
-            }
-
-            if (candidates.length === 1) {
-                return candidates[0];
-            }
-
-            if (!this.showHeelSection) {
-                return candidates[0] ?? null;
-            }
-
-            if (this.selectedHeel) {
-                return candidates.find((variant) => this.optionEquals(variant.heel_length, this.selectedHeel)) ?? null;
-            }
-
-            if (this.availableHeels.length === 1) {
-                return candidates.find((variant) => this.optionEquals(variant.heel_length, this.availableHeels[0])) ?? null;
-            }
-
-            const withoutHeel = candidates.filter((variant) => !this.hasHeel(variant));
-
-            if (withoutHeel.length === 1) {
-                return withoutHeel[0];
-            }
-
+        if (candidates.length === 0) {
             return null;
-        },
-        get selectionMessage() {
-            if (this.selectedVariant) {
-                return null;
+        }
+
+        if (candidates.length === 1) {
+            return candidates[0];
+        }
+
+        if (!showHeelSection()) {
+            return candidates[0] ?? null;
+        }
+
+        if (state.selectedHeel) {
+            return candidates.find((variant) => optionEquals(variant.heel_length, state.selectedHeel)) ?? null;
+        }
+
+        const heels = availableHeels();
+
+        if (heels.length === 1) {
+            return candidates.find((variant) => optionEquals(variant.heel_length, heels[0])) ?? null;
+        }
+
+        const withoutHeel = candidates.filter((variant) => !hasHeel(variant));
+
+        if (withoutHeel.length === 1) {
+            return withoutHeel[0];
+        }
+
+        return null;
+    }
+
+    function quantityCap() {
+        const variant = selectedVariant();
+
+        if (variant) {
+            return variant.quantity;
+        }
+
+        const matches = matchingVariants();
+
+        if (matches.length > 0) {
+            return Math.max(...matches.map((item) => item.quantity));
+        }
+
+        return 0;
+    }
+
+    function canChangeQuantity() {
+        return Boolean(state.selectedSize && state.selectedColor && quantityCap() > 0);
+    }
+
+    function selectionMessage() {
+        if (selectedVariant()) {
+            return '';
+        }
+
+        if (state.selectedSize && state.selectedColor && availableHeels().length > 1) {
+            return 'Multiple heel lengths are available. Please select one to continue.';
+        }
+
+        if (state.selectedSize || state.selectedColor || state.selectedHeel) {
+            return 'Select your size and color to continue.';
+        }
+
+        return showHeelSection()
+            ? 'Choose your size and color. Heel length is optional when only one option matches.'
+            : 'Choose your size and color.';
+    }
+
+    function renderSizeButtons() {
+        els.sizeButtons.forEach((button) => {
+            const size = button.dataset.variantSize;
+            const inStock = isSizeInStock(size);
+            const selected = optionEquals(state.selectedSize, size);
+
+            button.disabled = !inStock;
+            button.classList.toggle('is-selected', inStock && selected);
+            button.classList.toggle('variant-size-option--unavailable', !inStock);
+            button.classList.toggle('variant-size-option--available', inStock);
+        });
+    }
+
+    function renderColors() {
+        if (!els.colorSelect) {
+            return;
+        }
+
+        const colors = availableColors();
+        const current = state.selectedColor && colors.some((color) => optionEquals(color, state.selectedColor))
+            ? state.selectedColor
+            : '';
+
+        els.colorSelect.innerHTML = '<option value="">Select color</option>';
+
+        colors.forEach((color) => {
+            const option = document.createElement('option');
+            option.value = color;
+            option.textContent = color;
+
+            if (optionEquals(color, current)) {
+                option.selected = true;
             }
 
-            if (this.selectedSize && this.selectedColor && this.availableHeels.length > 1) {
-                return 'Multiple heel lengths are available. Please select one to continue.';
-            }
+            els.colorSelect.appendChild(option);
+        });
 
-            if (this.selectedSize || this.selectedColor || this.selectedHeel) {
-                return 'Select your size and color to continue.';
-            }
+        state.selectedColor = current || null;
+    }
 
-            return this.showHeelSection
-                ? 'Choose your size and color. Heel length is optional when only one option matches.'
-                : 'Choose your size and color.';
-        },
-        get maxQuantity() {
-            return this.quantityCap;
-        },
-        get quantityCap() {
-            if (this.selectedVariant) {
-                return this.selectedVariant.quantity;
-            }
+    function renderHeels() {
+        if (!els.heelSection || !els.heelButtons) {
+            return;
+        }
 
-            const matches = this.matchingVariants;
+        const heels = availableHeels();
+        const visible = showHeelSection() && state.selectedSize && state.selectedColor && heels.length > 0;
 
-            if (matches.length > 0) {
-                return Math.max(...matches.map((variant) => variant.quantity));
-            }
+        els.heelSection.hidden = !visible;
+        els.heelButtons.innerHTML = '';
 
-            return 0;
-        },
-        get canChangeQuantity() {
-            return this.selectedSize && this.selectedColor && this.quantityCap > 0;
-        },
-        selectSize(size) {
-            if (! this.isSizeInStock(size)) {
-                return;
-            }
+        if (!visible) {
+            return;
+        }
 
-            this.selectedSize = size;
-            this.selectedColor = null;
-            this.selectedHeel = null;
+        heels.forEach((heel) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = heel;
+            button.className = optionEquals(state.selectedHeel, heel)
+                ? 'variant-heel-option is-selected border px-3 py-2 text-sm transition'
+                : 'variant-heel-option border px-3 py-2 text-sm transition border-neutral-300 bg-white text-brand-black hover:border-brand-red';
 
-            if (this.availableColors.length === 1) {
-                this.selectedColor = this.availableColors[0];
-            }
+            button.addEventListener('click', () => {
+                state.selectedHeel = optionEquals(state.selectedHeel, heel) ? null : heel;
+                render();
+            });
 
-            this.syncQuantityInput();
-        },
-        onColorChange() {
-            this.selectedColor = this.selectedColor || null;
-            this.selectedHeel = null;
-            this.syncQuantityInput();
-        },
-        selectColor(color) {
-            this.selectedColor = color || null;
-            this.selectedHeel = null;
-            this.syncQuantityInput();
-        },
-        selectHeel(heel) {
-            this.selectedHeel = this.optionEquals(this.selectedHeel, heel) ? null : heel;
-            this.syncQuantityInput();
-        },
-        adjustQuantity(delta) {
-            if (! this.canChangeQuantity) {
-                return;
-            }
+            els.heelButtons.appendChild(button);
+        });
+    }
 
-            this.quantity = Math.min(
-                Math.max(this.quantity + delta, 1),
-                this.quantityCap,
-            );
-        },
-        syncQuantityInput() {
-            const submit = document.getElementById('add-to-cart');
+    function render() {
+        renderSizeButtons();
+        renderColors();
+        renderHeels();
 
-            if (! this.canChangeQuantity) {
-                this.quantity = 1;
-            } else {
-                this.quantity = Math.min(this.quantity, this.quantityCap);
-            }
+        const variant = selectedVariant();
+        const cap = quantityCap();
+        const canQty = canChangeQuantity();
 
-            if (submit) {
-                submit.disabled = submit.dataset.outOfStock === 'true' || !this.selectedVariant;
-            }
-        },
-    }));
-});
+        if (!canQty) {
+            state.quantity = 1;
+        } else {
+            state.quantity = Math.min(state.quantity, cap);
+        }
+
+        if (els.sizeInput) {
+            els.sizeInput.value = variant?.size || state.selectedSize || '';
+        }
+
+        if (els.colorInput) {
+            els.colorInput.value = variant?.color || state.selectedColor || '';
+        }
+
+        if (els.heelInput) {
+            els.heelInput.value = variant?.heel_length || state.selectedHeel || '';
+        }
+
+        if (els.message) {
+            const message = selectionMessage();
+            els.message.textContent = message;
+            els.message.hidden = message === '';
+        }
+
+        if (els.quantityInput) {
+            els.quantityInput.value = String(state.quantity);
+            els.quantityInput.max = String(cap || 1);
+            els.quantityInput.disabled = !canQty;
+        }
+
+        if (els.quantityDecrease) {
+            els.quantityDecrease.disabled = !canQty || state.quantity <= 1;
+        }
+
+        if (els.quantityIncrease) {
+            els.quantityIncrease.disabled = !canQty || state.quantity >= cap;
+        }
+
+        if (els.submit) {
+            els.submit.disabled = els.submit.dataset.outOfStock === 'true' || !variant;
+        }
+    }
+
+    function selectSize(size) {
+        if (!isSizeInStock(size)) {
+            return;
+        }
+
+        state.selectedSize = size;
+        state.selectedColor = null;
+        state.selectedHeel = null;
+
+        const colors = availableColors();
+
+        if (colors.length === 1) {
+            state.selectedColor = colors[0];
+        }
+
+        render();
+    }
+
+    els.sizeButtons.forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            selectSize(button.dataset.variantSize);
+        });
+    });
+
+    els.colorSelect?.addEventListener('change', () => {
+        state.selectedColor = els.colorSelect.value || null;
+        state.selectedHeel = null;
+        render();
+    });
+
+    els.quantityDecrease?.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        if (!canChangeQuantity() || state.quantity <= 1) {
+            return;
+        }
+
+        state.quantity -= 1;
+        render();
+    });
+
+    els.quantityIncrease?.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        if (!canChangeQuantity() || state.quantity >= quantityCap()) {
+            return;
+        }
+
+        state.quantity += 1;
+        render();
+    });
+
+    if (state.selectedSize && !isSizeInStock(state.selectedSize)) {
+        state.selectedSize = null;
+    }
+
+    render();
+}
+
+function bootProductVariantPickers() {
+    document.querySelectorAll('[data-product-variant-picker]').forEach(initProductVariantPicker);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootProductVariantPickers);
+} else {
+    bootProductVariantPickers();
+}

@@ -35,20 +35,23 @@
         return strnatcasecmp($left, $right);
     });
 
-    $initialSize = old('variant_size');
-    $initialColor = old('variant_color');
-    $initialHeel = old('variant_heel');
+    $pickerConfig = [
+        'variants' => $variants,
+        'initialSize' => old('variant_size'),
+        'initialColor' => old('variant_color'),
+        'initialHeel' => old('variant_heel'),
+    ];
 @endphp
 
 <div
-    x-data="productVariantPicker(@js($variants), @js($allSizes), @js($initialSize), @js($initialColor), @js($initialHeel))"
-    x-init="init()"
-    class="space-y-5"
+    class="product-variant-picker space-y-5"
+    data-product-variant-picker
+    data-config='@json($pickerConfig)'
 >
     <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
         <div class="mt-3 flex flex-wrap gap-2">
-            @forelse ($allSizes as $index => $size)
+            @forelse ($allSizes as $size)
                 @php
                     $sizeInStock = $variants->contains(
                         fn (array $variant) => strcasecmp(trim((string) $variant['size']), trim($size)) === 0
@@ -57,11 +60,8 @@
                 @endphp
                 <button
                     type="button"
-                    class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition"
-                    :class="sizeButtonClass(sizeOptions[{{ $index }}])"
-                    :disabled="! isSizeInStock(sizeOptions[{{ $index }}])"
-                    :aria-disabled="! isSizeInStock(sizeOptions[{{ $index }}])"
-                    @click.prevent="selectSize(sizeOptions[{{ $index }}])"
+                    data-variant-size="{{ $size }}"
+                    class="variant-size-option variant-size-option--{{ $sizeInStock ? 'available' : 'unavailable' }} min-w-[3rem] border px-3 py-2 text-sm transition"
                     @unless ($sizeInStock) disabled @endunless
                 >{{ $size }}</button>
             @empty
@@ -75,40 +75,26 @@
             <label for="variant-color" class="shrink-0 text-sm lowercase text-brand-muted">color</label>
             <select
                 id="variant-color"
+                data-variant-color
                 class="input-field mt-0 w-full max-w-[9rem]"
-                x-model="selectedColor"
-                @change="onColorChange()"
             >
                 <option value="">Select color</option>
-                <template x-for="color in availableColors" :key="color">
-                    <option :value="color" x-text="color"></option>
-                </template>
             </select>
         </div>
     </div>
 
-    <div x-show="showHeelSection" x-cloak>
+    <div data-variant-heel-section hidden>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">
             Heel length <span class="normal-case text-brand-muted">(optional)</span>
         </p>
-        <div class="mt-3 flex flex-wrap gap-2">
-            <template x-for="heel in availableHeels" :key="heel">
-                <button
-                    type="button"
-                    class="border px-3 py-2 text-sm transition"
-                    :class="optionEquals(selectedHeel, heel) ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
-                    @click="selectHeel(heel)"
-                    x-text="heel"
-                ></button>
-            </template>
-        </div>
+        <div class="mt-3 flex flex-wrap gap-2" data-variant-heel-buttons></div>
     </div>
 
-    <input type="hidden" name="variant_size" :value="selectedVariant ? selectedVariant.size : ''">
-    <input type="hidden" name="variant_color" :value="selectedVariant ? selectedVariant.color : ''">
-    <input type="hidden" name="variant_heel" :value="selectedVariant && selectedVariant.heel_length ? selectedVariant.heel_length : ''">
+    <input type="hidden" name="variant_size" value="" data-variant-size-input>
+    <input type="hidden" name="variant_color" value="" data-variant-color-input>
+    <input type="hidden" name="variant_heel" value="" data-variant-heel-input>
 
-    <p class="text-sm" x-show="selectionMessage" x-text="selectionMessage" :class="selectedVariant ? 'text-brand-black' : 'text-brand-muted'"></p>
+    <p class="text-sm text-brand-muted" data-variant-message></p>
 
     <div class="flex flex-col gap-4 pt-2">
         <div class="flex items-center gap-3">
@@ -116,35 +102,36 @@
             <div class="flex items-stretch">
                 <button
                     type="button"
+                    data-variant-quantity-decrease
                     class="flex h-10 w-10 items-center justify-center border border-neutral-300 bg-white text-lg leading-none transition hover:border-brand-red disabled:cursor-not-allowed disabled:opacity-50"
-                    @click.prevent="adjustQuantity(-1)"
-                    :disabled="!canChangeQuantity || quantity <= 1"
                     aria-label="Decrease quantity"
+                    disabled
                 >−</button>
                 <input
                     id="quantity"
                     type="number"
                     name="quantity"
                     min="1"
-                    x-model.number="quantity"
-                    :max="quantityCap"
+                    max="1"
+                    value="1"
+                    data-variant-quantity
                     class="input-field mt-0 h-10 w-14 rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    :disabled="!canChangeQuantity"
+                    disabled
                     readonly
                 >
                 <button
                     type="button"
+                    data-variant-quantity-increase
                     class="flex h-10 w-10 items-center justify-center border border-neutral-300 bg-white text-lg leading-none transition hover:border-brand-red disabled:cursor-not-allowed disabled:opacity-50"
-                    @click.prevent="adjustQuantity(1)"
-                    :disabled="!canChangeQuantity || quantity >= quantityCap"
                     aria-label="Increase quantity"
+                    disabled
                 >+</button>
             </div>
         </div>
 
         <button
-            id="add-to-cart"
             type="submit"
+            data-variant-submit
             data-out-of-stock="{{ $product->isInStock() ? 'false' : 'true' }}"
             class="btn-primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
             @disabled(! $product->isInStock())
