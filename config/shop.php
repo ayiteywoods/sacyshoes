@@ -55,7 +55,31 @@ return [
 
     'product_sizes' => ['36', '37', '38', '39', '40', '41', '42'],
 
-    'product_colors' => ['Black', 'Brown', 'Nude', 'White', 'Red', 'Beige', 'Gold'],
+    'product_colors' => ['Black', 'Brown', 'Nude', 'White', 'Red', 'Beige', 'Gold', 'Pink'],
+
+    /*
+    | Maps color names (lowercase keys) to CSS color values for the storefront picker.
+    | Names not listed here still work when they are valid CSS color names (e.g. pink, navy).
+    */
+    'product_color_map' => [
+        'black' => '#1a1a1a',
+        'brown' => '#6b4423',
+        'nude' => '#e3bc9a',
+        'white' => '#ffffff',
+        'red' => '#c41e3a',
+        'beige' => '#d4b896',
+        'gold' => '#d4af37',
+        'pink' => '#ffc0cb',
+        'blue' => '#2563eb',
+        'navy' => '#1e3a5f',
+        'green' => '#16a34a',
+        'grey' => '#9ca3af',
+        'gray' => '#9ca3af',
+        'silver' => '#c0c0c0',
+        'wine' => '#722f37',
+        'cream' => '#fffdd0',
+        'tan' => '#d2b48c',
+    ],
 
     'product_heel_lengths' => ['Flat', '1in', '2in', '3in', '4in'],
 

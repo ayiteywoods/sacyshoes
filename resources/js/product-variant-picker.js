@@ -1,11 +1,13 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('productVariantPicker', (
         variants = [],
+        colorMap = {},
         initialSize = null,
         initialColor = null,
         initialHeel = null,
     ) => ({
         variants,
+        colorMap,
         selectedSize: initialSize,
         selectedColor: initialColor,
         selectedHeel: initialHeel,
@@ -19,6 +21,34 @@ document.addEventListener('alpine:init', () => {
             const heel = variant.heel_length ? String(variant.heel_length).trim() : '';
 
             return heel !== '' && heel.toLowerCase() !== 'flat';
+        },
+        colorCss(color) {
+            if (!color) {
+                return '#f5f5f5';
+            }
+
+            const key = this.normalizeOption(color);
+
+            if (this.colorMap[key]) {
+                return this.colorMap[key];
+            }
+
+            const canvas = document.createElement('canvas');
+
+            if (!canvas.getContext) {
+                return '#9ca3af';
+            }
+
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#000000';
+            context.fillStyle = String(color).trim().toLowerCase();
+            const resolved = context.fillStyle;
+
+            if (resolved === '#000000' && key !== 'black') {
+                return '#9ca3af';
+            }
+
+            return resolved;
         },
         get inStockVariants() {
             return this.variants.filter((variant) => variant.quantity > 0);
@@ -137,7 +167,7 @@ document.addEventListener('alpine:init', () => {
             this.syncQuantityInput();
         },
         selectColor(color) {
-            this.selectedColor = this.optionEquals(this.selectedColor, color) ? null : color;
+            this.selectedColor = color || null;
             this.selectedHeel = null;
             this.syncQuantityInput();
         },

@@ -15,10 +15,11 @@
     $initialSize = old('variant_size');
     $initialColor = old('variant_color');
     $initialHeel = old('variant_heel');
+    $colorMap = config('shop.product_color_map', []);
 @endphp
 
 <div
-    x-data="productVariantPicker(@js($variants), @js($initialSize), @js($initialColor), @js($initialHeel))"
+    x-data="productVariantPicker(@js($variants), @js($colorMap), @js($initialSize), @js($initialColor), @js($initialHeel))"
     x-init="syncQuantityInput()"
     class="space-y-5"
 >
@@ -38,19 +39,26 @@
     </div>
 
     <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">
-            Color <span class="text-brand-red" aria-hidden="true">*</span>
-        </p>
-        <div class="mt-3 flex flex-col gap-2">
-            <template x-for="color in availableColors" :key="color">
-                <button
-                    type="button"
-                    class="w-full border px-4 py-3 text-center text-sm transition"
-                    :class="optionEquals(selectedColor, color) ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
-                    @click="selectColor(color)"
-                    x-text="color"
-                ></button>
-            </template>
+        <div class="flex items-center gap-4">
+            <label for="variant-color" class="shrink-0 text-sm lowercase text-brand-muted">color</label>
+            <div class="flex flex-1 items-center gap-3">
+                <span
+                    class="h-8 w-8 shrink-0 border border-neutral-300"
+                    :style="{ backgroundColor: colorCss(selectedColor) }"
+                    aria-hidden="true"
+                ></span>
+                <select
+                    id="variant-color"
+                    class="input-field mt-0 flex-1"
+                    :value="selectedColor ?? ''"
+                    @change="selectColor($event.target.value || null)"
+                >
+                    <option value="">Select color</option>
+                    <template x-for="color in availableColors" :key="color">
+                        <option :value="color" x-text="color"></option>
+                    </template>
+                </select>
+            </div>
         </div>
     </div>
 
