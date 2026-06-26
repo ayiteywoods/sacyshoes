@@ -457,6 +457,26 @@
         @apply inline-flex items-center justify-center rounded-none border border-white bg-transparent px-5 py-2.5 text-xs font-normal uppercase tracking-wide text-white transition hover:bg-white hover:text-brand-black;
     }
 
+    .variant-size-option {
+        @apply relative overflow-hidden;
+    }
+
+    .variant-size-option--unavailable {
+        @apply cursor-not-allowed;
+    }
+
+    .variant-size-option--unavailable::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -15%;
+        width: 130%;
+        height: 1px;
+        background-color: currentColor;
+        transform: rotate(-35deg);
+        pointer-events: none;
+    }
+
     .btn-outline-red {
         @apply inline-flex items-center justify-center rounded-none border border-brand-red bg-brand-white px-5 py-2.5 text-xs font-normal tracking-wide text-brand-red transition hover:bg-brand-red hover:text-white;
         text-transform: uppercase;

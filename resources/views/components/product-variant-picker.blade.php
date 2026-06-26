@@ -19,17 +19,23 @@
 
 <div
     x-data="productVariantPicker(@js($variants), @js($initialSize), @js($initialColor), @js($initialHeel))"
-    x-init="syncQuantityInput()"
+    x-init="if (selectedSize && ! isSizeInStock(selectedSize)) { selectedSize = null; } syncQuantityInput()"
     class="space-y-5"
 >
     <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
         <div class="mt-3 flex flex-wrap gap-2">
-            <template x-for="size in availableSizes" :key="size">
+            <template x-for="size in allSizes" :key="size">
                 <button
                     type="button"
-                    class="min-w-[3rem] border px-3 py-2 text-sm transition"
-                    :class="optionEquals(selectedSize, size) ? 'border-brand-red bg-brand-red text-white' : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red'"
+                    class="variant-size-option min-w-[3rem] border px-3 py-2 text-sm transition"
+                    :class="isSizeInStock(size)
+                        ? (optionEquals(selectedSize, size)
+                            ? 'border-brand-red bg-brand-red text-white'
+                            : 'border-neutral-300 bg-white text-brand-black hover:border-brand-red')
+                        : 'variant-size-option--unavailable border-neutral-900 bg-white text-brand-black'"
+                    :disabled="! isSizeInStock(size)"
+                    :aria-disabled="! isSizeInStock(size)"
                     @click="selectSize(size)"
                     x-text="size"
                 ></button>

@@ -20,14 +20,42 @@ document.addEventListener('alpine:init', () => {
 
             return heel !== '' && heel.toLowerCase() !== 'flat';
         },
+        get allSizes() {
+            const seen = new Set();
+            const sizes = [];
+
+            for (const variant of this.variants) {
+                const key = this.normalizeOption(variant.size);
+
+                if (! key || seen.has(key)) {
+                    continue;
+                }
+
+                seen.add(key);
+                sizes.push(variant.size);
+            }
+
+            return sizes.sort((left, right) => {
+                const leftNumber = Number(left);
+                const rightNumber = Number(right);
+
+                if (! Number.isNaN(leftNumber) && ! Number.isNaN(rightNumber)) {
+                    return leftNumber - rightNumber;
+                }
+
+                return String(left).localeCompare(String(right));
+            });
+        },
+        isSizeInStock(size) {
+            return this.variants.some((variant) =>
+                this.optionEquals(variant.size, size) && variant.quantity > 0,
+            );
+        },
         get inStockVariants() {
             return this.variants.filter((variant) => variant.quantity > 0);
         },
         get showHeelSection() {
             return this.inStockVariants.some((variant) => this.hasHeel(variant));
-        },
-        get availableSizes() {
-            return [...new Set(this.inStockVariants.map((variant) => variant.size))];
         },
         get availableColors() {
             const seen = new Set();
@@ -131,6 +159,10 @@ document.addEventListener('alpine:init', () => {
             return Number(input?.value || 1);
         },
         selectSize(size) {
+            if (! this.isSizeInStock(size)) {
+                return;
+            }
+
             this.selectedSize = this.optionEquals(this.selectedSize, size) ? null : size;
             this.selectedColor = null;
             this.selectedHeel = null;
