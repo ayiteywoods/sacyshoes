@@ -11,6 +11,7 @@ use App\Models\ShippingOption;
 use App\Models\ShippingRegion;
 use App\Models\User;
 use App\Support\OrderNumberGenerator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -108,8 +109,13 @@ class CheckoutService
                 ]);
             }
 
-            $available = app(StockReservationService::class)
-                ->availableQuantity($variant, $item->quantity);
+            $available = app(StockReservationService::class)->sellableQuantity($variant);
+
+            if ($available <= 0) {
+                throw ValidationException::withMessages([
+                    'cart' => "{$product->name} ({$variant->displayLabel()}) is out of stock.",
+                ]);
+            }
 
             if ($item->quantity > $available) {
                 throw ValidationException::withMessages([

@@ -77,7 +77,7 @@ class Product extends Model
     {
         return $this->variants()
             ->where('is_active', true)
-            ->whereColumn('quantity', '>', 'reserved_quantity');
+            ->where('quantity', '>', 0);
     }
 
     public function primaryImage(): ?ProductImage
@@ -132,7 +132,7 @@ class Product extends Model
         if ($this->variants()->exists()) {
             return $this->variants()
                 ->where('is_active', true)
-                ->whereColumn('quantity', '>', 'reserved_quantity')
+                ->where('quantity', '>', 0)
                 ->exists();
         }
 

@@ -8,7 +8,7 @@
         ? [
             ['value' => (string) $itemCount, 'label' => Str::plural('Item', $itemCount), 'icon' => 'bag', 'tone' => 'red'],
             ['value' => config('shop.currency_symbol').' '.number_format($subtotal, 0), 'label' => 'Subtotal', 'icon' => 'cart', 'tone' => 'white'],
-            ['value' => (string) config('shop.cart_reservation_minutes').' min', 'label' => 'Reserved', 'icon' => 'calendar', 'tone' => 'red'],
+            ['value' => 'Pay', 'label' => 'To confirm', 'icon' => 'calendar', 'tone' => 'red'],
         ]
         : [
             ['value' => '0', 'label' => 'Items', 'icon' => 'bag', 'tone' => 'red'],

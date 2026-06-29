@@ -9,10 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class ProductVariantResolver
 {
-    public function __construct(
-        protected StockReservationService $reservations
-    ) {}
-
     public function resolveForProduct(
         Product $product,
         string $size,
@@ -77,7 +73,7 @@ class ProductVariantResolver
         return $product->variants()
             ->where('is_active', true)
             ->get()
-            ->filter(fn (ProductVariant $variant) => $this->reservations->availableQuantity($variant) > 0)
+            ->filter(fn (ProductVariant $variant) => $variant->quantity > 0)
             ->filter(fn (ProductVariant $variant) => $this->normalize($variant->size) === $normalizedSize)
             ->filter(fn (ProductVariant $variant) => $this->normalize($variant->color) === $normalizedColor)
             ->values();

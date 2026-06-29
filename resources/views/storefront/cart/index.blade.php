@@ -13,8 +13,7 @@
             </div>
         @else
             <div class="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                Items in your cart are reserved for {{ config('shop.cart_reservation_minutes') }} minutes.
-                Complete checkout and payment before then, or they will be removed and returned to stock.
+                Stock is confirmed when payment is completed. If an item sells out while you are checking out, payment may not go through.
             </div>
 
             <div class="mt-10 grid gap-10 lg:grid-cols-3">

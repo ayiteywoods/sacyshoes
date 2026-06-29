@@ -4,25 +4,26 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\InsufficientStockException;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderPaymentService
 {
     public function __construct(
         protected OrderNotificationService $notifications,
-        protected StockReservationService $reservations
+        protected StockReservationService $stock
     ) {}
 
     public function markAsPaid(Order $order, Payment $payment, array $data = []): void
     {
         $wasAlreadyPaid = false;
+        $stockUnavailable = false;
 
-        DB::transaction(function () use ($order, $payment, $data, &$wasAlreadyPaid) {
+        DB::transaction(function () use ($order, $payment, $data, &$wasAlreadyPaid, &$stockUnavailable) {
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             $payment = Payment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
 
@@ -32,6 +33,36 @@ class OrderPaymentService
 
             if ($order->payment_status === PaymentStatus::Paid) {
                 $wasAlreadyPaid = true;
+
+                return;
+            }
+
+            $order->loadMissing('items');
+
+            try {
+                $this->stock->fulfillOrderItems($order->items);
+            } catch (InsufficientStockException $exception) {
+                $stockUnavailable = true;
+
+                $payment->update([
+                    'status' => PaymentStatus::Failed,
+                    'metadata' => array_merge($payment->metadata ?? [], [
+                        'failure_reason' => 'stock_unavailable',
+                        'failure_message' => $exception->getMessage(),
+                        'verification' => $data,
+                    ]),
+                ]);
+
+                $order->update([
+                    'status' => OrderStatus::Cancelled,
+                    'payment_status' => PaymentStatus::Failed,
+                ]);
+
+                Log::warning('Payment received but stock unavailable.', [
+                    'order_id' => $order->id,
+                    'payment_id' => $payment->id,
+                    'message' => $exception->getMessage(),
+                ]);
 
                 return;
             }
@@ -64,30 +95,13 @@ class OrderPaymentService
                 'status' => OrderStatus::Paid,
                 'paid_at' => $paidAt,
             ]);
-
-            $order->loadMissing('items');
-
-            foreach ($order->items as $item) {
-                if ($item->product_variant_id) {
-                    $variant = ProductVariant::query()->find($item->product_variant_id);
-
-                    if ($variant) {
-                        $this->reservations->fulfill($variant, $item->quantity);
-                    }
-
-                    continue;
-                }
-
-                if ($item->product_id) {
-                    Product::query()
-                        ->whereKey($item->product_id)
-                        ->where('quantity', '>=', $item->quantity)
-                        ->decrement('quantity', $item->quantity);
-                }
-            }
         });
 
-        if ($wasAlreadyPaid) {
+        if ($wasAlreadyPaid || $stockUnavailable) {
+            if ($stockUnavailable) {
+                app(AdminNotificationService::class)->sync();
+            }
+
             return;
         }
 

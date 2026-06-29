@@ -2,86 +2,97 @@
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class StockReservationService
 {
-    public function availableQuantity(ProductVariant $variant, int $alreadyReserved = 0): int
+    /**
+     * Physical stock available for sale. Cart items do not reduce this until payment succeeds.
+     */
+    public function sellableQuantity(ProductVariant $variant): int
     {
         $variant->refresh();
 
-        return max(0, $variant->quantity - $variant->reserved_quantity + $alreadyReserved);
+        return max(0, (int) $variant->quantity);
     }
 
-    public function reserve(ProductVariant $variant, int $quantity, int $previouslyReserved = 0): void
+    /**
+     * @deprecated Cart reservations are no longer used. Use sellableQuantity().
+     */
+    public function availableQuantity(ProductVariant $variant, int $alreadyReserved = 0): int
     {
-        if ($quantity <= 0) {
-            return;
-        }
-
-        $available = $this->availableQuantity($variant, $previouslyReserved);
-
-        if ($quantity > $available) {
-            throw ValidationException::withMessages([
-                'quantity' => $available > 0
-                    ? "Only {$available} item(s) available for the selected option."
-                    : 'This product option is currently out of stock.',
-            ]);
-        }
-
-        ProductVariant::query()
-            ->whereKey($variant->id)
-            ->increment('reserved_quantity', $quantity - $previouslyReserved);
+        return $this->sellableQuantity($variant);
     }
 
-    public function release(ProductVariant $variant, int $quantity): void
+    /**
+     * @param  Collection<int, OrderItem>  $items
+     *
+     * @throws InsufficientStockException
+     */
+    public function fulfillOrderItems(Collection $items): void
     {
-        if ($quantity <= 0) {
-            return;
-        }
+        DB::transaction(function () use ($items) {
+            $variants = [];
+            $requiredQuantities = [];
 
-        DB::transaction(function () use ($variant, $quantity) {
-            $locked = ProductVariant::query()
-                ->whereKey($variant->id)
-                ->lockForUpdate()
-                ->first();
+            foreach ($items as $item) {
+                if (! $item->product_variant_id) {
+                    continue;
+                }
 
-            if (! $locked) {
-                return;
+                $variantId = (int) $item->product_variant_id;
+                $requiredQuantities[$variantId] = ($requiredQuantities[$variantId] ?? 0) + (int) $item->quantity;
             }
 
-            $locked->update([
-                'reserved_quantity' => max(0, $locked->reserved_quantity - $quantity),
-            ]);
-        });
-    }
+            foreach ($requiredQuantities as $variantId => $required) {
+                $locked = ProductVariant::query()
+                    ->whereKey($variantId)
+                    ->lockForUpdate()
+                    ->first();
 
-    public function fulfill(ProductVariant $variant, int $quantity): void
-    {
-        if ($quantity <= 0) {
-            return;
-        }
+                if (! $locked) {
+                    throw new InsufficientStockException('A product option on this order is no longer available.');
+                }
 
-        DB::transaction(function () use ($variant, $quantity) {
-            $locked = ProductVariant::query()
-                ->whereKey($variant->id)
-                ->lockForUpdate()
-                ->first();
+                if ($locked->quantity < $required) {
+                    throw new InsufficientStockException('An item in this order is no longer in stock.');
+                }
 
-            if (! $locked) {
-                return;
+                $variants[$variantId] = $locked;
             }
 
-            $locked->update([
-                'quantity' => max(0, $locked->quantity - $quantity),
-                'reserved_quantity' => max(0, $locked->reserved_quantity - $quantity),
-            ]);
+            foreach ($items as $item) {
+                if (! $item->product_variant_id) {
+                    if ($item->product_id) {
+                        Product::query()
+                            ->whereKey($item->product_id)
+                            ->where('quantity', '>=', $item->quantity)
+                            ->decrement('quantity', $item->quantity);
+                    }
 
-            $this->syncProductQuantity($locked->product_id);
+                    continue;
+                }
+
+                $variantId = (int) $item->product_variant_id;
+                $needed = (int) $item->quantity;
+                $variant = $variants[$variantId];
+
+                $variant->update([
+                    'quantity' => $variant->quantity - $needed,
+                    'reserved_quantity' => max(0, (int) $variant->reserved_quantity - $needed),
+                ]);
+
+                $variants[$variantId] = $variant->fresh();
+            }
+
+            foreach ($variants as $variant) {
+                $this->syncProductQuantity($variant->product_id);
+            }
         });
     }
 
@@ -96,8 +107,13 @@ class StockReservationService
             ]);
     }
 
-    public function reservationExpiry(): Carbon
+    /**
+     * Clear legacy cart reservation counters left from the old cart-hold model.
+     */
+    public function clearLegacyReservations(): int
     {
-        return now()->addMinutes((int) config('shop.cart_reservation_minutes', 60));
+        return ProductVariant::query()
+            ->where('reserved_quantity', '>', 0)
+            ->update(['reserved_quantity' => 0]);
     }
 }

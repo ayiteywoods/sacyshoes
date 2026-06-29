@@ -15,7 +15,7 @@ class CartService
     protected ?Cart $resolvedCart = null;
 
     public function __construct(
-        protected StockReservationService $reservations
+        protected StockReservationService $stock
     ) {}
 
     public function resolve(): Cart
@@ -58,29 +58,16 @@ class CartService
                     ->first();
 
                 if ($existing) {
-                    $previousQuantity = $existing->quantity;
-                    $newQuantity = $previousQuantity + $guestItem->quantity;
-
-                    $this->reservations->reserve(
-                        $guestItem->variant,
-                        $newQuantity,
-                        $previousQuantity
-                    );
-
                     $existing->update([
-                        'quantity' => $newQuantity,
+                        'quantity' => $existing->quantity + $guestItem->quantity,
                         'unit_price' => $guestItem->unit_price,
-                        'reserved_until' => $this->reservations->reservationExpiry(),
                     ]);
-
-                    $this->reservations->release($guestItem->variant, $guestItem->quantity);
                 } else {
                     $userCart->items()->create([
                         'product_id' => $guestItem->product_id,
                         'product_variant_id' => $guestItem->product_variant_id,
                         'quantity' => $guestItem->quantity,
                         'unit_price' => $guestItem->unit_price,
-                        'reserved_until' => $guestItem->reserved_until ?? $this->reservations->reservationExpiry(),
                     ]);
                 }
             }
@@ -101,29 +88,22 @@ class CartService
         $item = $cart->items()->where('product_variant_id', $variant->id)->first();
 
         if ($item) {
-            $previousQuantity = $item->quantity;
-            $newQuantity = $previousQuantity + $quantity;
-            $this->assertVariantAvailable($product, $variant, $newQuantity, $previousQuantity);
-
-            $this->reservations->reserve($variant, $newQuantity, $previousQuantity);
+            $newQuantity = $item->quantity + $quantity;
+            $this->assertVariantAvailable($product, $variant, $newQuantity);
 
             $item->update([
                 'quantity' => $newQuantity,
                 'unit_price' => $variant->sellingPrice(),
-                'reserved_until' => $this->reservations->reservationExpiry(),
             ]);
 
             return $item->fresh();
         }
-
-        $this->reservations->reserve($variant, $quantity);
 
         return $cart->items()->create([
             'product_id' => $product->id,
             'product_variant_id' => $variant->id,
             'quantity' => $quantity,
             'unit_price' => $variant->sellingPrice(),
-            'reserved_until' => $this->reservations->reservationExpiry(),
         ]);
     }
 
@@ -132,15 +112,11 @@ class CartService
         $this->assertItemBelongsToCurrentCart($item);
         $item->loadMissing(['product', 'variant']);
 
-        $previousQuantity = $item->quantity;
-        $this->assertVariantAvailable($item->product, $item->variant, $quantity, $previousQuantity);
-
-        $this->reservations->reserve($item->variant, $quantity, $previousQuantity);
+        $this->assertVariantAvailable($item->product, $item->variant, $quantity);
 
         $item->update([
             'quantity' => $quantity,
             'unit_price' => $item->variant->sellingPrice(),
-            'reserved_until' => $this->reservations->reservationExpiry(),
         ]);
 
         return $item->fresh();
@@ -149,28 +125,12 @@ class CartService
     public function remove(CartItem $item): void
     {
         $this->assertItemBelongsToCurrentCart($item);
-        $item->loadMissing('variant');
-
-        if ($item->variant) {
-            $this->reservations->release($item->variant, $item->quantity);
-        }
-
         $item->delete();
     }
 
     public function clear(bool $releaseStock = true): void
     {
-        $cart = $this->resolve()->load('items.variant');
-
-        if ($releaseStock) {
-            foreach ($cart->items as $item) {
-                if ($item->variant) {
-                    $this->reservations->release($item->variant, $item->quantity);
-                }
-            }
-        }
-
-        $cart->items()->delete();
+        $this->resolve()->items()->delete();
     }
 
     public function count(): int
@@ -189,7 +149,6 @@ class CartService
         Product $product,
         ProductVariant $variant,
         int $quantity,
-        int $alreadyReserved = 0
     ): void {
         if ((int) $variant->product_id !== (int) $product->id) {
             throw ValidationException::withMessages([
@@ -215,7 +174,7 @@ class CartService
             ]);
         }
 
-        $available = $this->reservations->availableQuantity($variant, $alreadyReserved);
+        $available = $this->stock->sellableQuantity($variant);
 
         if ($available <= 0) {
             throw ValidationException::withMessages([

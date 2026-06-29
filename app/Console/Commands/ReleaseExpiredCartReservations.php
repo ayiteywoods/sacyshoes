@@ -5,42 +5,24 @@ namespace App\Console\Commands;
 use App\Models\CartItem;
 use App\Services\StockReservationService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class ReleaseExpiredCartReservations extends Command
 {
     protected $signature = 'cart:release-expired';
 
-    protected $description = 'Release stock for cart items that were not checked out in time';
+    protected $description = 'Clear legacy cart reservation timestamps and stock hold counters';
 
-    public function handle(StockReservationService $reservations): int
+    public function handle(StockReservationService $stock): int
     {
-        $expiredItems = CartItem::query()
-            ->with('variant')
+        $clearedItems = CartItem::query()
             ->whereNotNull('reserved_until')
-            ->where('reserved_until', '<', now())
-            ->get();
+            ->update([
+                'reserved_until' => null,
+            ]);
 
-        if ($expiredItems->isEmpty()) {
-            $this->info('No expired cart reservations.');
+        $clearedStock = $stock->clearLegacyReservations();
 
-            return self::SUCCESS;
-        }
-
-        $released = 0;
-
-        DB::transaction(function () use ($expiredItems, $reservations, &$released) {
-            foreach ($expiredItems as $item) {
-                if ($item->variant) {
-                    $reservations->release($item->variant, $item->quantity);
-                }
-
-                $item->delete();
-                $released++;
-            }
-        });
-
-        $this->info("Released {$released} expired cart reservation(s).");
+        $this->info("Cleared {$clearedItems} cart reservation timestamp(s) and reset {$clearedStock} legacy stock hold(s).");
 
         return self::SUCCESS;
     }
