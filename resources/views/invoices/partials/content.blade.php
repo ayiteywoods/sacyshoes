@@ -128,6 +128,17 @@
                     <td style="padding:6px 24px 6px 0;text-align:right;font-weight:700;">Total</td>
                     <td style="padding:6px 0;text-align:right;font-weight:700;white-space:nowrap;">{{ $currency }}{{ number_format($order->total, 2) }}</td>
                 </tr>
+                @if (filled($order->customer_comment))
+                    <tr>
+                        <td colspan="2" style="padding-top:18px;">
+                            <div style="border-top:1px solid #e5e5e5;margin-bottom:10px;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 24px 6px 0;text-align:right;vertical-align:top;font-weight:700;">Customer Note:</td>
+                        <td style="padding:6px 0;text-align:right;vertical-align:top;line-height:1.6;white-space:pre-line;color:#444444;">{{ $order->customer_comment }}</td>
+                    </tr>
+                @endif
                 <tr>
                     <td colspan="2" style="padding-top:10px;">
                         <div style="border-top:1px solid #111111;"></div>
@@ -136,21 +147,6 @@
             </table>
         </td>
     </tr>
-
-    @if (filled($order->customer_comment))
-        <tr>
-            <td colspan="3" style="padding-top:20px;">
-                <table role="presentation" align="right" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;min-width:320px;max-width:100%;">
-                    <tr>
-                        <td style="padding:0;text-align:right;vertical-align:top;">
-                            <div style="font-weight:700;margin-bottom:6px;">Customer Note:</div>
-                            <div style="line-height:1.6;text-align:right;white-space:pre-line;color:#444444;">{{ $order->customer_comment }}</div>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    @endif
 
     <tr>
         <td colspan="3" style="padding-top:36px;font-size:12px;line-height:1.6;color:#666666;text-align:center;">

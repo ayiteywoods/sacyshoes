@@ -181,22 +181,6 @@
                             <div class="border border-neutral-200 bg-brand-light p-4 text-sm text-brand-muted">
                                 Accra delivery: payment is made directly to the delivery person upon arrival.
                             </div>
-
-                            <div class="mt-4">
-                                <label for="customer_comment" class="text-xs uppercase tracking-wide text-brand-muted">Add Note</label>
-                                <textarea
-                                    id="customer_comment"
-                                    name="customer_comment"
-                                    rows="3"
-                                    maxlength="1000"
-                                    placeholder="Add delivery instructions, landmarks, or any notes for the rider."
-                                    class="input-field mt-1"
-                                    :disabled="!isAccra"
-                                >{{ old('customer_comment') }}</textarea>
-                                @error('customer_comment')
-                                    <p class="mt-1 text-xs text-brand-red">{{ $message }}</p>
-                                @enderror
-                            </div>
                         </div>
 
                         <div class="sm:col-span-2" x-show="!isAccra" x-cloak>
@@ -227,6 +211,21 @@
                             </div>
                             @error('shipping_option_id')
                                 <p class="mt-2 text-xs text-brand-red">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="customer_comment" class="text-xs uppercase tracking-wide text-brand-muted">Add Note</label>
+                            <textarea
+                                id="customer_comment"
+                                name="customer_comment"
+                                rows="3"
+                                maxlength="1000"
+                                placeholder="Add delivery instructions, landmarks, gate codes, or any notes for delivery."
+                                class="input-field mt-1"
+                            >{{ old('customer_comment') }}</textarea>
+                            @error('customer_comment')
+                                <p class="mt-1 text-xs text-brand-red">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>

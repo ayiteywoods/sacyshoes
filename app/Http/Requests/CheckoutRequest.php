@@ -61,8 +61,6 @@ class CheckoutRequest extends FormRequest
         $regionId = $this->integer('shipping_region_id');
         if ($regionId && ShippingRegion::query()->find($regionId)?->is_accra) {
             $this->merge(['shipping_option_id' => null]);
-        } else {
-            $this->merge(['customer_comment' => null]);
         }
     }
 
