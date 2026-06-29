@@ -178,7 +178,11 @@ class Order extends Model
 
     public function invoicePaymentMethodLabel(): string
     {
-        return str_replace(' Or ', ' / ', $this->paymentMethodLabel());
+        return str_replace(
+            [' Or ', 'Debit/Credit Cards'],
+            [' / ', 'Debit or Credit Card'],
+            $this->paymentMethodLabel(),
+        );
     }
 
     public function invoiceShippingLabel(): string
