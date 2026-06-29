@@ -318,7 +318,7 @@ function initProductVariantPicker(root) {
         }
 
         if (els.submit) {
-            els.submit.disabled = els.submit.dataset.outOfStock === 'true' || !variant;
+            els.submit.disabled = els.submit.dataset.outOfStock === 'true';
         }
     }
 
