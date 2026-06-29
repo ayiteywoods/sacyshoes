@@ -1,8 +1,6 @@
 @props(['product'])
 
 @php
-    use Illuminate\Support\Str;
-
     $pickerId = 'product-variant-picker-'.$product->id;
 
     $variants = $product->variants
@@ -16,28 +14,22 @@
         ])
         ->values();
 
-    $allSizes = [];
-    $seenSizes = [];
+    $allColors = [];
+    $seenColors = [];
 
     foreach ($variants as $variant) {
-        $size = (string) ($variant['size'] ?? '');
-        $key = strtolower(trim($size));
+        $color = (string) ($variant['color'] ?? '');
+        $key = strtolower(trim($color));
 
-        if ($key === '' || isset($seenSizes[$key])) {
+        if ($key === '' || isset($seenColors[$key])) {
             continue;
         }
 
-        $seenSizes[$key] = true;
-        $allSizes[] = $size;
+        $seenColors[$key] = true;
+        $allColors[] = $color;
     }
 
-    usort($allSizes, function (string $left, string $right): int {
-        if (is_numeric($left) && is_numeric($right)) {
-            return (float) $left <=> (float) $right;
-        }
-
-        return strnatcasecmp($left, $right);
-    });
+    usort($allColors, 'strnatcasecmp');
 
     $pickerConfig = [
         'variants' => $variants->values()->all(),
@@ -61,6 +53,34 @@
         line-height: 1.25rem;
         cursor: pointer;
         transition: border-color 150ms, background-color 150ms, color 150ms;
+    }
+
+    #{{ $pickerId }} .variant-size-option--unavailable {
+        display: inline-flex;
+        min-width: 3rem;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #171717;
+        background-color: #fff;
+        color: #111;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        cursor: not-allowed;
+    }
+
+    #{{ $pickerId }} .variant-size-option--unavailable::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -15%;
+        width: 130%;
+        height: 1px;
+        background-color: currentColor;
+        transform: rotate(-35deg);
+        pointer-events: none;
     }
 
     #{{ $pickerId }} .variant-size-radio:checked + .variant-size-option--available,
@@ -87,44 +107,6 @@
     data-product-variant-picker
 >
     <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
-        <div class="mt-3 flex flex-wrap gap-2">
-            @forelse ($allSizes as $size)
-                @php
-                    $sizeInStock = $variants->contains(
-                        fn (array $variant) => strcasecmp(trim((string) $variant['size']), trim($size)) === 0
-                            && $variant['quantity'] > 0,
-                    );
-                    $sizeInputId = $pickerId.'-'.Str::slug($size);
-                @endphp
-                @if ($sizeInStock)
-                    <span class="inline-flex">
-                        <input
-                            type="radio"
-                            name="{{ $pickerId }}-size"
-                            id="{{ $sizeInputId }}"
-                            value="{{ $size }}"
-                            data-variant-size-radio
-                            class="variant-size-radio peer sr-only"
-                        >
-                        <label
-                            for="{{ $sizeInputId }}"
-                            class="variant-size-option variant-size-option--available"
-                        >{{ $size }}</label>
-                    </span>
-                @else
-                    <span
-                        class="variant-size-option variant-size-option--unavailable inline-flex min-w-[3rem] border px-3 py-2 text-sm"
-                        aria-disabled="true"
-                    >{{ $size }}</span>
-                @endif
-            @empty
-                <p class="text-sm text-brand-muted">No sizes configured for this product.</p>
-            @endforelse
-        </div>
-    </div>
-
-    <div>
         <div class="flex items-center gap-4">
             <label for="variant-color-{{ $product->id }}" class="shrink-0 text-sm lowercase text-brand-muted">color</label>
             <select
@@ -133,7 +115,17 @@
                 class="input-field mt-0 w-full max-w-[9rem]"
             >
                 <option value="">Select color</option>
+                @foreach ($allColors as $color)
+                    <option value="{{ $color }}" @selected(old('variant_color') === $color)>{{ $color }}</option>
+                @endforeach
             </select>
+        </div>
+    </div>
+
+    <div data-variant-size-section>
+        <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
+        <div class="mt-3 flex flex-wrap gap-2" data-variant-size-options>
+            <p class="text-sm text-brand-muted">Select a color to see available sizes.</p>
         </div>
     </div>
 

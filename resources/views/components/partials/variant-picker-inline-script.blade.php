@@ -21,6 +21,7 @@
 
     const els = {
         colorSelect: root.querySelector('[data-variant-color]'),
+        sizeOptions: root.querySelector('[data-variant-size-options]'),
         heelSection: root.querySelector('[data-variant-heel-section]'),
         heelButtons: root.querySelector('[data-variant-heel-buttons]'),
         sizeInput: root.querySelector('[data-variant-size-input]'),
@@ -45,26 +46,42 @@
         return heel !== '' && heel.toLowerCase() !== 'flat';
     }
 
+    function sizeSlug(size) {
+        return String(size).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'size';
+    }
+
     function inStockVariants() {
         return variants.filter((variant) => variant.quantity > 0);
     }
 
+    function isSizeInStockForColor(size, color) {
+        return variants.some((variant) =>
+            optionEquals(variant.size, size)
+            && optionEquals(variant.color, color)
+            && variant.quantity > 0,
+        );
+    }
+
     function isSizeInStock(size) {
-        return variants.some((variant) => optionEquals(variant.size, size) && variant.quantity > 0);
+        if (!state.selectedColor) {
+            return false;
+        }
+
+        return isSizeInStockForColor(size, state.selectedColor);
     }
 
     function showHeelSection() {
         return inStockVariants().some((variant) => hasHeel(variant));
     }
 
-    function availableColors() {
+    function sizesForColor(color) {
         const seen = new Set();
 
-        return inStockVariants()
-            .filter((variant) => !state.selectedSize || optionEquals(variant.size, state.selectedSize))
-            .map((variant) => variant.color)
-            .filter((color) => {
-                const key = normalizeOption(color);
+        return variants
+            .filter((variant) => optionEquals(variant.color, color))
+            .map((variant) => variant.size)
+            .filter((size) => {
+                const key = normalizeOption(size);
 
                 if (!key || seen.has(key)) {
                     return false;
@@ -73,6 +90,13 @@
                 seen.add(key);
 
                 return true;
+            })
+            .sort((left, right) => {
+                if (!Number.isNaN(Number(left)) && !Number.isNaN(Number(right))) {
+                    return Number(left) - Number(right);
+                }
+
+                return String(left).localeCompare(String(right), undefined, { numeric: true, sensitivity: 'base' });
             });
     }
 
@@ -164,17 +188,21 @@
             return '';
         }
 
+        if (!state.selectedColor) {
+            return 'Choose a color first.';
+        }
+
+        if (!state.selectedSize) {
+            return 'Choose your size.';
+        }
+
         if (state.selectedSize && state.selectedColor && availableHeels().length > 1) {
             return 'Multiple heel lengths are available. Please select one to continue.';
         }
 
-        if (state.selectedSize || state.selectedColor || state.selectedHeel) {
-            return 'Select your size and color to continue.';
-        }
-
         return showHeelSection()
-            ? 'Choose your size and color. Heel length is optional when only one option matches.'
-            : 'Choose your size and color.';
+            ? 'Heel length is optional when only one option matches.'
+            : '';
     }
 
     function renderSizeRadios() {
@@ -199,31 +227,75 @@
         });
     }
 
-    function renderColors() {
-        if (!els.colorSelect) {
+    function renderSizes() {
+        if (!els.sizeOptions) {
             return;
         }
 
-        const colors = availableColors();
-        const current = state.selectedColor && colors.some((color) => optionEquals(color, state.selectedColor))
-            ? state.selectedColor
-            : '';
+        els.sizeOptions.innerHTML = '';
 
-        els.colorSelect.innerHTML = '<option value="">Select color</option>';
+        if (!state.selectedColor) {
+            const prompt = document.createElement('p');
+            prompt.className = 'text-sm text-brand-muted';
+            prompt.textContent = 'Select a color to see available sizes.';
+            els.sizeOptions.appendChild(prompt);
+            state.selectedSize = null;
 
-        colors.forEach((color) => {
-            const option = document.createElement('option');
-            option.value = color;
-            option.textContent = color;
+            return;
+        }
 
-            if (optionEquals(color, current)) {
-                option.selected = true;
+        const sizes = sizesForColor(state.selectedColor);
+
+        if (sizes.length === 0) {
+            const empty = document.createElement('p');
+            empty.className = 'text-sm text-brand-muted';
+            empty.textContent = 'No sizes available for this color.';
+            els.sizeOptions.appendChild(empty);
+            state.selectedSize = null;
+
+            return;
+        }
+
+        if (state.selectedSize && !sizes.some((size) => optionEquals(size, state.selectedSize))) {
+            state.selectedSize = null;
+        }
+
+        sizes.forEach((size) => {
+            const inStock = isSizeInStockForColor(size, state.selectedColor);
+            const inputId = `${root.id}-${sizeSlug(size)}`;
+
+            if (inStock) {
+                const wrap = document.createElement('span');
+                wrap.className = 'inline-flex';
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = `${root.id}-size`;
+                radio.id = inputId;
+                radio.value = size;
+                radio.className = 'variant-size-radio peer sr-only';
+                radio.setAttribute('data-variant-size-radio', '');
+
+                const label = document.createElement('label');
+                label.htmlFor = inputId;
+                label.className = 'variant-size-option variant-size-option--available';
+                label.textContent = size;
+
+                wrap.appendChild(radio);
+                wrap.appendChild(label);
+                els.sizeOptions.appendChild(wrap);
+
+                return;
             }
 
-            els.colorSelect.appendChild(option);
+            const unavailable = document.createElement('span');
+            unavailable.className = 'variant-size-option variant-size-option--unavailable';
+            unavailable.setAttribute('aria-disabled', 'true');
+            unavailable.textContent = size;
+            els.sizeOptions.appendChild(unavailable);
         });
 
-        state.selectedColor = current || null;
+        renderSizeRadios();
     }
 
     function renderHeels() {
@@ -259,8 +331,11 @@
     }
 
     function render() {
-        renderSizeRadios();
-        renderColors();
+        if (els.colorSelect && state.selectedColor) {
+            els.colorSelect.value = state.selectedColor;
+        }
+
+        renderSizes();
         renderHeels();
 
         const variant = selectedVariant();
@@ -314,20 +389,12 @@
     }
 
     function selectSize(size) {
-        if (!isSizeInStock(size)) {
+        if (!state.selectedColor || !isSizeInStock(size)) {
             return;
         }
 
         state.selectedSize = size;
-        state.selectedColor = null;
         state.selectedHeel = null;
-
-        const colors = availableColors();
-
-        if (colors.length === 1) {
-            state.selectedColor = colors[0];
-        }
-
         render();
     }
 
@@ -379,11 +446,16 @@
 
     els.colorSelect?.addEventListener('change', () => {
         state.selectedColor = els.colorSelect.value || null;
+        state.selectedSize = null;
         state.selectedHeel = null;
         render();
     });
 
-    if (state.selectedSize && !isSizeInStock(state.selectedSize)) {
+    if (state.selectedSize && state.selectedColor && !isSizeInStockForColor(state.selectedSize, state.selectedColor)) {
+        state.selectedSize = null;
+    }
+
+    if (!state.selectedColor) {
         state.selectedSize = null;
     }
 
