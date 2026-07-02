@@ -1,6 +1,7 @@
 @php
     use App\Enums\AdminPermission;
 
+    $user = $user ?? null;
     $selectedPermissions = old('admin_permissions', $user?->admin_permissions ?? []);
     $isSuperAdmin = old('is_super_admin', $user ? $user->admin_permissions === null : true);
 @endphp
