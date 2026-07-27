@@ -34,7 +34,8 @@ class OrderNotificationService
             return;
         }
 
-        Mail::to($email)->sendNow(new PaymentReceivedMail($order));
+        // Queue if possible; never block payment confirmation on SMTP.
+        Mail::to($email)->send(new PaymentReceivedMail($order));
 
         app(EmailDispatchService::class)->log(
             slug: EmailTemplate::SLUG_PAYMENT_RECEIVED,

@@ -8,5 +8,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('orders:reconcile-paystack')->everyFiveMinutes();
+Schedule::command('orders:reconcile-paystack')->everyMinute();
 Schedule::command('orders:cancel-unpaid')->everyFiveMinutes();

@@ -60,6 +60,18 @@ class PaystackController extends Controller
             'metadata' => [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
+                'custom_fields' => [
+                    [
+                        'display_name' => 'Order Number',
+                        'variable_name' => 'order_number',
+                        'value' => $order->order_number,
+                    ],
+                    [
+                        'display_name' => 'Order ID',
+                        'variable_name' => 'order_id',
+                        'value' => (string) $order->id,
+                    ],
+                ],
             ],
         ]);
 
@@ -173,15 +185,8 @@ class PaystackController extends Controller
 
     protected function resolvePaymentReference(Order $order): string
     {
-        $latestPayment = Payment::query()
-            ->where('order_id', $order->id)
-            ->latest('id')
-            ->first();
-
-        if ($latestPayment?->status === PaymentStatus::Pending) {
-            return $latestPayment->reference;
-        }
-
-        return $order->order_number.'_'.time();
+        // Always use a fresh reference. Reusing abandoned/failed Paystack
+        // references can leave successful retries unmatched on the dashboard.
+        return $order->order_number.'_'.time().'_'.bin2hex(random_bytes(2));
     }
 }

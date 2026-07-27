@@ -189,6 +189,62 @@ class PaystackPaymentReconciliationService
         return ['reconciled' => false, 'reason' => 'mark as paid did not update order'];
     }
 
+    /**
+     * @return array<int, array{reference: string, status: string, amount: string}>
+     */
+    public function findSuccessfulPaystackTransactionsForOrder(Order $order, int $days = 30): array
+    {
+        $from = $order->created_at?->copy()->subDay() ?? now()->subDays($days);
+        $matches = [];
+        $page = 1;
+
+        do {
+            try {
+                $transactions = $this->paystack->listTransactions([
+                    'status' => 'success',
+                    'from' => $from->toIso8601String(),
+                    'to' => now()->toIso8601String(),
+                    'perPage' => 100,
+                    'page' => $page,
+                ]);
+            } catch (Throwable) {
+                break;
+            }
+
+            foreach ($transactions as $transaction) {
+                $orderId = $this->orderIdFromPaystackData($transaction);
+                $orderNumber = $this->orderNumberFromPaystackData($transaction);
+
+                $email = data_get($transaction, 'customer.email')
+                    ?? data_get($transaction, 'authorization.email');
+                $amount = isset($transaction['amount']) ? round((float) $transaction['amount'] / 100, 2) : null;
+
+                $matchesOrder = (string) $orderId === (string) $order->id
+                    || $orderNumber === $order->order_number
+                    || (
+                        $email
+                        && $amount !== null
+                        && round((float) $order->total, 2) === $amount
+                        && in_array($email, array_filter([$order->billing_email, $order->shipping_email, $order->customerEmail()]), true)
+                    );
+
+                if (! $matchesOrder) {
+                    continue;
+                }
+
+                $matches[] = [
+                    'reference' => (string) ($transaction['reference'] ?? ''),
+                    'status' => (string) ($transaction['status'] ?? 'unknown'),
+                    'amount' => number_format($amount ?? 0, 2),
+                ];
+            }
+
+            $page++;
+        } while (count($transactions) === 100 && $page <= 10);
+
+        return $matches;
+    }
+
     protected function reconcileOrderFromPaystackTransactions(Order $order): bool
     {
         $from = $order->created_at?->copy()->subDay() ?? now()->subDays(30);

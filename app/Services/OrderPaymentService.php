@@ -10,6 +10,7 @@ use App\Models\Payment;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class OrderPaymentService
 {
@@ -83,19 +84,23 @@ class OrderPaymentService
                 $paymentMetadata['stock_warning_message'] = 'Stock was unavailable when payment was confirmed. Fulfill manually.';
             }
 
-            $payment->update([
-                'status' => PaymentStatus::Paid,
-                'channel' => $data['channel'] ?? data_get($data, 'authorization.channel') ?? $payment->channel,
-                'provider_transaction_id' => $transactionId ?: $payment->provider_transaction_id,
-                'paid_at' => $paidAt,
-                'metadata' => $paymentMetadata,
-            ]);
+            // Avoid observers/mail during the payment transaction so a notification
+            // failure cannot roll back a successful Paystack charge.
+            Order::withoutEvents(function () use ($order, $payment, $data, $paidAt, $transactionId, $paymentMetadata) {
+                $payment->update([
+                    'status' => PaymentStatus::Paid,
+                    'channel' => $data['channel'] ?? data_get($data, 'authorization.channel') ?? $payment->channel,
+                    'provider_transaction_id' => $transactionId ?: $payment->provider_transaction_id,
+                    'paid_at' => $paidAt,
+                    'metadata' => $paymentMetadata,
+                ]);
 
-            $order->update([
-                'payment_status' => PaymentStatus::Paid,
-                'status' => OrderStatus::Paid,
-                'paid_at' => $paidAt,
-            ]);
+                $order->update([
+                    'payment_status' => PaymentStatus::Paid,
+                    'status' => OrderStatus::Paid,
+                    'paid_at' => $paidAt,
+                ]);
+            });
 
             if ($wasCancelled) {
                 Log::info('Reinstated cancelled order after confirmed payment.', [
@@ -113,9 +118,42 @@ class OrderPaymentService
         $order->refresh();
         $payment->refresh();
 
-        app(CartService::class)->clearOrderItems($order);
+        if ($order->payment_status !== PaymentStatus::Paid) {
+            Log::error('markAsPaid finished but order is still unpaid.', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'payment_id' => $payment->id,
+            ]);
 
-        $this->notifications->paymentReceived($order);
-        app(AdminNotificationService::class)->sync();
+            return;
+        }
+
+        try {
+            app(CartService::class)->clearOrderItems($order);
+        } catch (Throwable $exception) {
+            Log::warning('Failed clearing cart after payment.', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        try {
+            $this->notifications->paymentReceived($order);
+        } catch (Throwable $exception) {
+            Log::error('Payment email failed after order was marked paid.', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        try {
+            app(AdminNotificationService::class)->sync();
+        } catch (Throwable $exception) {
+            Log::warning('Admin notification sync failed after payment.', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }
