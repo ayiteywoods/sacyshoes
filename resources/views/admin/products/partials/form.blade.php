@@ -133,7 +133,7 @@
         <div class="flex items-center justify-between gap-3">
             <div>
                 <label class="block text-sm font-medium">Size & color options<span class="text-brand-red" aria-hidden="true"> *</span></label>
-                <p class="mt-1 text-xs text-brand-muted">Add the combinations customers can choose from. Heel length is optional. Color names appear on the shop exactly as you type them.</p>
+                <p class="mt-1 text-xs text-brand-muted">Add the combinations customers can choose from. Size is optional — leave it blank if the product has no sizes. Color is required. Heel length is optional.</p>
             </div>
             <button type="button" class="btn-outline px-3 py-2 text-xs" @click="addRow()">Add option</button>
         </div>
@@ -142,7 +142,7 @@
             <table class="min-w-full text-sm">
                 <thead class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-brand-muted">
                     <tr>
-                        <th class="px-2 py-2">Size <span class="text-brand-red">*</span></th>
+                        <th class="px-2 py-2">Size <span class="normal-case text-brand-muted">(optional)</span></th>
                         <th class="px-2 py-2">Color <span class="text-brand-red">*</span></th>
                         <th class="px-2 py-2">Heel length <span class="normal-case text-brand-muted">(optional)</span></th>
                         <th class="px-2 py-2">Qty <span class="text-brand-red">*</span></th>
@@ -156,7 +156,7 @@
                         <tr class="border-b border-neutral-100">
                             <td class="px-2 py-2">
                                 <input type="hidden" :name="`variants[${index}][id]`" :value="row.id || ''">
-                                <input type="text" :name="`variants[${index}][size]`" x-model="row.size" list="product-sizes" required class="input-field min-w-[5rem]">
+                                <input type="text" :name="`variants[${index}][size]`" x-model="row.size" list="product-sizes" placeholder="Optional" class="input-field min-w-[5rem]">
                             </td>
                             <td class="px-2 py-2">
                                 <input

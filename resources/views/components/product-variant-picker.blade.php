@@ -33,6 +33,7 @@
 
     $pickerConfig = [
         'variants' => $variants->values()->all(),
+        'requiresSize' => $product->requiresSizeSelection(),
         'initialSize' => old('variant_size'),
         'initialColor' => old('variant_color'),
         'initialHeel' => old('variant_heel'),
@@ -122,7 +123,7 @@
         </div>
     </div>
 
-    <div data-variant-size-section>
+    <div data-variant-size-section @if (! $product->requiresSizeSelection()) hidden @endif>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-muted">Size</p>
         <div class="mt-3 flex flex-wrap gap-2" data-variant-size-options>
             <p class="text-sm text-brand-muted">Select a color to see available sizes.</p>

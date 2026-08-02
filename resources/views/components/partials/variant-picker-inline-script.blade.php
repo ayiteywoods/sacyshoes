@@ -12,6 +12,7 @@
 
     const config = @json($pickerConfig);
     const variants = config.variants || [];
+    const requiresSize = config.requiresSize !== false;
     const state = {
         selectedSize: config.initialSize || null,
         selectedColor: config.initialColor || null,
@@ -21,6 +22,7 @@
 
     const els = {
         colorSelect: root.querySelector('[data-variant-color]'),
+        sizeSection: root.querySelector('[data-variant-size-section]'),
         sizeOptions: root.querySelector('[data-variant-size-options]'),
         heelSection: root.querySelector('[data-variant-heel-section]'),
         heelButtons: root.querySelector('[data-variant-heel-buttons]'),
@@ -104,7 +106,7 @@
         return [...new Set(
             inStockVariants()
                 .filter((variant) => {
-                    if (state.selectedSize && !optionEquals(variant.size, state.selectedSize)) {
+                    if (requiresSize && state.selectedSize && !optionEquals(variant.size, state.selectedSize)) {
                         return false;
                     }
 
@@ -119,14 +121,25 @@
     }
 
     function matchingVariants() {
-        if (!state.selectedSize || !state.selectedColor) {
+        if (!state.selectedColor) {
             return [];
         }
 
-        return inStockVariants().filter((variant) =>
-            optionEquals(variant.size, state.selectedSize)
-            && optionEquals(variant.color, state.selectedColor),
-        );
+        if (requiresSize && !state.selectedSize) {
+            return [];
+        }
+
+        return inStockVariants().filter((variant) => {
+            if (!optionEquals(variant.color, state.selectedColor)) {
+                return false;
+            }
+
+            if (!requiresSize) {
+                return true;
+            }
+
+            return optionEquals(variant.size, state.selectedSize);
+        });
     }
 
     function selectedVariant() {
@@ -180,7 +193,15 @@
     }
 
     function canChangeQuantity() {
-        return Boolean(state.selectedSize && state.selectedColor && quantityCap() > 0);
+        if (!state.selectedColor || quantityCap() <= 0) {
+            return false;
+        }
+
+        if (requiresSize && !state.selectedSize) {
+            return false;
+        }
+
+        return true;
     }
 
     function selectionMessage() {
@@ -192,11 +213,11 @@
             return 'Choose a color first.';
         }
 
-        if (!state.selectedSize) {
+        if (requiresSize && !state.selectedSize) {
             return 'Choose your size.';
         }
 
-        if (state.selectedSize && state.selectedColor && availableHeels().length > 1) {
+        if (state.selectedColor && availableHeels().length > 1) {
             return 'Multiple heel lengths are available. Please select one to continue.';
         }
 
@@ -228,7 +249,15 @@
     }
 
     function renderSizes() {
-        if (!els.sizeOptions) {
+        if (els.sizeSection) {
+            els.sizeSection.hidden = !requiresSize;
+        }
+
+        if (!requiresSize || !els.sizeOptions) {
+            if (!requiresSize) {
+                state.selectedSize = null;
+            }
+
             return;
         }
 
@@ -304,7 +333,8 @@
         }
 
         const heels = availableHeels();
-        const visible = showHeelSection() && state.selectedSize && state.selectedColor && heels.length > 0;
+        const sizeReady = !requiresSize || Boolean(state.selectedSize);
+        const visible = showHeelSection() && sizeReady && state.selectedColor && heels.length > 0;
 
         els.heelSection.hidden = !visible;
         els.heelButtons.innerHTML = '';

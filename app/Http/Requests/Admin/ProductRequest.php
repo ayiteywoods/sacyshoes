@@ -51,7 +51,7 @@ class ProductRequest extends FormRequest
             ],
             'variants' => ['required', 'array', 'min:1'],
             'variants.*.id' => ['nullable', 'integer', 'exists:product_variants,id'],
-            'variants.*.size' => ['required', 'string', 'max:50'],
+            'variants.*.size' => ['nullable', 'string', 'max:50'],
             'variants.*.color' => ['required', 'string', 'max:50'],
             'variants.*.heel_length' => ['nullable', 'string', 'max:50'],
             'variants.*.quantity' => ['required', 'integer', 'min:0'],

@@ -137,7 +137,7 @@ class ProductController extends Controller
 
             $variant->fill([
                 'sku' => $sku,
-                'size' => trim((string) $variantData['size']),
+                'size' => filled($variantData['size'] ?? null) ? trim((string) $variantData['size']) : '',
                 'color' => trim((string) $variantData['color']),
                 'heel_length' => $heelLength,
                 'quantity' => (int) $variantData['quantity'],
@@ -160,9 +160,11 @@ class ProductController extends Controller
     private function generateVariantSku(Product $product, array $variantData, ?int $ignoreId = null): string
     {
         $base = strtoupper(Str::slug($product->sku, ''));
-        $size = strtoupper(Str::slug($variantData['size'], ''));
+        $size = filled($variantData['size'] ?? null)
+            ? strtoupper(Str::slug((string) $variantData['size'], ''))
+            : null;
         $color = strtoupper(Str::slug($variantData['color'], ''));
-        $parts = [$base, $size, $color];
+        $parts = array_values(array_filter([$base, $size, $color]));
 
         if (filled($variantData['heel_length'] ?? null)) {
             $parts[] = strtoupper(Str::slug($variantData['heel_length'], ''));

@@ -11,15 +11,25 @@ class ProductVariantResolver
 {
     public function resolveForProduct(
         Product $product,
-        string $size,
+        ?string $size,
         string $color,
         ?string $heelLength = null
     ): ProductVariant {
+        $product->loadMissing('variants');
+
+        if ($product->requiresSizeSelection() && blank($size)) {
+            throw ValidationException::withMessages([
+                'variant_size' => 'Please select a size.',
+            ]);
+        }
+
         $candidates = $this->matchingVariants($product, $size, $color);
 
         if ($candidates->isEmpty()) {
             throw ValidationException::withMessages([
-                'variant_size' => 'The selected size or color is not available.',
+                'variant_size' => $product->requiresSizeSelection()
+                    ? 'The selected size or color is not available.'
+                    : 'The selected color is not available.',
             ]);
         }
 
@@ -58,23 +68,30 @@ class ProductVariantResolver
         }
 
         throw ValidationException::withMessages([
-            'variant_heel' => 'Please select a heel length for this size and color.',
+            'variant_heel' => 'Please select a heel length for this option.',
         ]);
     }
 
     /**
      * @return Collection<int, ProductVariant>
      */
-    protected function matchingVariants(Product $product, string $size, string $color): Collection
+    protected function matchingVariants(Product $product, ?string $size, string $color): Collection
     {
         $normalizedSize = $this->normalize($size);
         $normalizedColor = $this->normalize($color);
+        $requiresSize = $product->requiresSizeSelection();
 
         return $product->variants()
             ->where('is_active', true)
             ->get()
             ->filter(fn (ProductVariant $variant) => $variant->quantity > 0)
-            ->filter(fn (ProductVariant $variant) => $this->normalize($variant->size) === $normalizedSize)
+            ->filter(function (ProductVariant $variant) use ($normalizedSize, $requiresSize) {
+                if (! $requiresSize) {
+                    return true;
+                }
+
+                return $this->normalize($variant->size) === $normalizedSize;
+            })
             ->filter(fn (ProductVariant $variant) => $this->normalize($variant->color) === $normalizedColor)
             ->values();
     }

@@ -80,6 +80,17 @@ class Product extends Model
             ->where('quantity', '>', 0);
     }
 
+    /**
+     * True when this product has at least one size configured.
+     * Customers must pick a size only when this returns true.
+     */
+    public function requiresSizeSelection(): bool
+    {
+        $this->loadMissing('variants');
+
+        return $this->variants->contains(fn (ProductVariant $variant) => filled($variant->size));
+    }
+
     public function primaryImage(): ?ProductImage
     {
         return $this->images()->where('is_primary', true)->first()

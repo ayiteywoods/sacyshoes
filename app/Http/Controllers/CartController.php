@@ -45,7 +45,7 @@ class CartController extends Controller
 
         $variant = $this->variantResolver->resolveForProduct(
             $product,
-            $request->string('variant_size')->toString(),
+            $request->filled('variant_size') ? $request->string('variant_size')->toString() : null,
             $request->string('variant_color')->toString(),
             $request->filled('variant_heel') ? $request->string('variant_heel')->toString() : null,
         );
