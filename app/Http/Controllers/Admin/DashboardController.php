@@ -42,6 +42,10 @@ class DashboardController extends Controller
             ->paginate(self::LIST_PER_PAGE, ['*'], 'top_selling_page')
             ->withQueryString();
 
+        $soldBySize = $reports->quantitiesSoldBySize($from, $to);
+        $soldByColor = $reports->quantitiesSoldByColor($from, $to);
+        $soldByVariant = $reports->quantitiesSoldByVariant($from, $to, 8);
+
         $recentOrders = Order::query()
             ->with('user')
             ->latest()
@@ -81,6 +85,8 @@ class DashboardController extends Controller
         return view('admin.dashboard', [
             'period' => $period,
             'periodLabel' => $reports->dashboardPeriodLabel($period),
+            'periodFrom' => $from,
+            'periodTo' => $to,
             'periodStats' => $periodStats,
             'comparison' => $comparison,
             'attention' => $attention,
@@ -96,6 +102,9 @@ class DashboardController extends Controller
             'recentActivity' => $recentActivity,
             'recentCustomers' => $recentCustomers,
             'ordersToFulfill' => $ordersToFulfill,
+            'soldBySize' => $soldBySize,
+            'soldByColor' => $soldByColor,
+            'soldByVariant' => $soldByVariant,
             'greeting' => $greeting,
             'storeSettings' => StoreSetting::current(),
         ]);

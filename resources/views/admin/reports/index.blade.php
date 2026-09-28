@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('heading', 'Sales Reports')
-@section('subheading', 'Daily and monthly performance with exports')
+@section('subheading', 'Sales by period, including quantities sold by size and color')
 
 @section('content')
     <div class="card p-4 sm:p-6">
@@ -28,7 +28,7 @@
         </form>
     </div>
 
-    <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <div class="card p-4 sm:p-5">
             <p class="text-xs uppercase tracking-wide text-brand-muted">Revenue</p>
             <p class="mt-2 text-2xl font-semibold text-brand-red">GHS {{ number_format($summary['revenue'], 2) }}</p>
@@ -36,6 +36,10 @@
         <div class="card p-4 sm:p-5">
             <p class="text-xs uppercase tracking-wide text-brand-muted">Orders</p>
             <p class="mt-2 text-2xl font-semibold">{{ $summary['orders'] }}</p>
+        </div>
+        <div class="card p-4 sm:p-5">
+            <p class="text-xs uppercase tracking-wide text-brand-muted">Pairs sold</p>
+            <p class="mt-2 text-2xl font-semibold">{{ number_format($summary['units_sold']) }}</p>
         </div>
         <div class="card p-4 sm:p-5">
             <p class="text-xs uppercase tracking-wide text-brand-muted">Transactions</p>
@@ -51,6 +55,58 @@
                 @endif
             </p>
         </div>
+    </div>
+
+    <div class="mt-8 grid gap-6 lg:grid-cols-2">
+        <div class="card overflow-hidden">
+            <x-admin-section-header title="Sizes sold" subtitle="Paid sales for this period, with remaining stock by size" />
+            @include('admin.partials.sold-quantity-bars', ['rows' => $soldBySize])
+        </div>
+        <div class="card overflow-hidden">
+            <x-admin-section-header title="Colors sold" subtitle="Paid sales for this period, with remaining stock by color" />
+            @include('admin.partials.sold-quantity-bars', ['rows' => $soldByColor])
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <x-admin-table-panel :page-ids="$soldByVariant->map(fn ($row) => $row->product_name.'-'.$row->size.'-'.$row->color)">
+            <div class="border-b border-neutral-200 px-4 py-4 sm:px-6">
+                <h2 class="font-semibold">Sold by size and color</h2>
+                <p class="mt-1 text-sm text-brand-muted">Paid sales for the selected dates beside current inventory for each size and color.</p>
+            </div>
+            <table class="admin-data-table">
+                <thead>
+                    <tr>
+                        <x-admin-table-leading-header />
+                        <x-admin-sort-th column="product_name" label="Product" class="admin-cell-primary" sort-key="variant_sort" direction-key="variant_direction" page-key="variant_page" />
+                        <x-admin-sort-th column="size" label="Size" sort-key="variant_sort" direction-key="variant_direction" page-key="variant_page" />
+                        <x-admin-sort-th column="color" label="Color" sort-key="variant_sort" direction-key="variant_direction" page-key="variant_page" />
+                        <x-admin-sort-th column="units_sold" label="Qty sold" sort-key="variant_sort" direction-key="variant_direction" page-key="variant_page" />
+                        <th class="admin-table-cell text-right font-medium whitespace-nowrap">In stock</th>
+                        <x-admin-sort-th column="revenue" label="Revenue" align="right" sort-key="variant_sort" direction-key="variant_direction" page-key="variant_page" />
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($soldByVariant as $row)
+                        <tr>
+                            <x-admin-table-leading-cells :id="$row->product_name.'-'.$row->size.'-'.$row->color" :number="$soldByVariant->firstItem() + $loop->index" />
+                            <td class="admin-table-cell admin-cell-primary font-medium">{{ $row->product_name }}</td>
+                            <td class="admin-table-cell whitespace-nowrap">{{ $row->size }}</td>
+                            <td class="admin-table-cell whitespace-nowrap">{{ $row->color }}</td>
+                            <td class="admin-table-cell whitespace-nowrap">{{ number_format($row->units_sold) }}</td>
+                            <td class="admin-table-cell whitespace-nowrap text-right {{ $row->stock_left < 10 ? 'font-medium text-brand-red' : '' }}">{{ number_format($row->stock_left) }}</td>
+                            <td class="admin-table-cell whitespace-nowrap text-right">GHS {{ number_format($row->revenue, 2) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="admin-table-cell py-8 text-center text-brand-muted">No paid sales in this period.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </x-admin-table-panel>
+
+        <x-admin-pagination :paginator="$soldByVariant" />
     </div>
 
     <div class="mt-8 grid gap-6 lg:grid-cols-3">

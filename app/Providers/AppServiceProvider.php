@@ -31,9 +31,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (str_starts_with((string) config('app.url'), 'https://')) {
-            URL::forceScheme('https');
-        }
+        $this->forceHttpsWhenNeeded();
 
         app(StoreSettingService::class)->applyToConfig();
 
@@ -64,5 +62,26 @@ class AppServiceProvider extends ServiceProvider
                 ->whereKey($value)
                 ->firstOrFail();
         });
+    }
+
+    private function forceHttpsWhenNeeded(): void
+    {
+        if (! str_starts_with((string) config('app.url'), 'https://')) {
+            return;
+        }
+
+        if ($this->app->runningInConsole()) {
+            URL::forceScheme('https');
+
+            return;
+        }
+
+        $host = request()->getHost();
+
+        if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+            return;
+        }
+
+        URL::forceScheme('https');
     }
 }

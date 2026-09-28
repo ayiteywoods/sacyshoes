@@ -9,6 +9,7 @@ use App\Enums\UserRole;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\DB;
 
 class AdminReportService
 {
+    /** @var Collection<string, int>|null */
+    private ?Collection $variantStockIndex = null;
+
     public function dashboardStats(): array
     {
         $paidQuery = Order::query()->where('payment_status', PaymentStatus::Paid);
@@ -68,7 +72,7 @@ class AdminReportService
     }
 
     /**
-     * @return array{revenue: float, orders: int, average_order: float, new_customers: int}
+     * @return array{revenue: float, orders: int, average_order: float, units_sold: int, new_customers: int}
      */
     public function dashboardStatsForPeriod(Carbon $from, Carbon $to): array
     {
@@ -83,11 +87,17 @@ class AdminReportService
             'revenue' => $revenue,
             'orders' => $orderCount,
             'average_order' => $orderCount > 0 ? round($revenue / $orderCount, 2) : 0.0,
+            'units_sold' => $this->unitsSoldForPeriod($from, $to),
             'new_customers' => User::query()
                 ->where('role', UserRole::Customer)
                 ->whereBetween('created_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
                 ->count(),
         ];
+    }
+
+    public function unitsSoldForPeriod(Carbon $from, Carbon $to): int
+    {
+        return (int) $this->paidOrderItemsForPeriod($from, $to)->sum('order_items.quantity');
     }
 
     /**
@@ -302,7 +312,7 @@ class AdminReportService
     }
 
     /**
-     * @return array{revenue: float, orders: int, transactions: int, average_order: float}
+     * @return array{revenue: float, orders: int, transactions: int, average_order: float, units_sold: int}
      */
     public function periodSummary(Carbon $from, Carbon $to): array
     {
@@ -319,6 +329,7 @@ class AdminReportService
             'orders' => $count,
             'transactions' => $count,
             'average_order' => $count > 0 ? round($revenue / $count, 2) : 0.0,
+            'units_sold' => $this->unitsSoldForPeriod($from, $to),
         ];
     }
 
@@ -359,6 +370,193 @@ class AdminReportService
             ->groupBy('order_items.product_name');
 
         return DB::query()->fromSub($subQuery, 'top_selling');
+    }
+
+    /**
+     * @return Collection<int, object{label: string, units_sold: int, stock_left: int}>
+     */
+    public function quantitiesSoldBySize(Carbon $from, Carbon $to): Collection
+    {
+        return $this->quantitiesSoldByOption($from, $to, 'size', 'No size');
+    }
+
+    /**
+     * @return Collection<int, object{label: string, units_sold: int, stock_left: int}>
+     */
+    public function quantitiesSoldByColor(Carbon $from, Carbon $to): Collection
+    {
+        return $this->quantitiesSoldByOption($from, $to, 'color', 'No color');
+    }
+
+    /**
+     * @return Collection<int, object{product_name: string, size: string, color: string, units_sold: int, stock_left: int, revenue: float}>
+     */
+    public function quantitiesSoldByVariant(Carbon $from, Carbon $to, int $limit = 10): Collection
+    {
+        return $this->quantitiesSoldByVariantQuery($from, $to)
+            ->orderByDesc('units_sold')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row) => $this->presentVariantSale($row));
+    }
+
+    public function presentVariantSale(object $row): object
+    {
+        $size = $this->optionLabel($row->size ?? null, 'No size');
+        $color = $this->optionLabel($row->color ?? null, 'No color');
+        $productId = isset($row->product_id) ? (int) $row->product_id : 0;
+
+        return (object) [
+            'product_id' => $productId,
+            'product_name' => (string) $row->product_name,
+            'size' => $size,
+            'color' => $color,
+            'units_sold' => (int) $row->units_sold,
+            'stock_left' => $this->stockLeftFor($productId, $size, $color),
+            'revenue' => round((float) ($row->revenue ?? 0), 2),
+        ];
+    }
+
+    /**
+     * @return \Illuminate\Database\Query\Builder
+     */
+    public function quantitiesSoldByVariantQuery(Carbon $from, Carbon $to): \Illuminate\Database\Query\Builder
+    {
+        $sizeExpr = $this->variantOptionSql('size');
+        $colorExpr = $this->variantOptionSql('color');
+
+        $subQuery = $this->paidOrderItemsForPeriod($from, $to)
+            ->select([
+                'order_items.product_id',
+                'order_items.product_name',
+                DB::raw("{$sizeExpr} as size"),
+                DB::raw("{$colorExpr} as color"),
+                DB::raw('SUM(order_items.quantity) as units_sold'),
+                DB::raw('SUM(order_items.total_price) as revenue'),
+            ])
+            ->groupBy('order_items.product_id')
+            ->groupBy('order_items.product_name')
+            ->groupByRaw($sizeExpr)
+            ->groupByRaw($colorExpr);
+
+        return DB::query()->fromSub($subQuery, 'variant_sales');
+    }
+
+    /**
+     * @return Collection<int, object{product_name: string, size: string, color: string, units_sold: int, stock_left: int, revenue: float}>
+     */
+    public function quantitiesSoldByVariantAll(Carbon $from, Carbon $to): Collection
+    {
+        return $this->quantitiesSoldByVariantQuery($from, $to)
+            ->orderByDesc('units_sold')
+            ->get()
+            ->map(fn ($row) => $this->presentVariantSale($row));
+    }
+
+    /**
+     * @return Collection<int, object{label: string, units_sold: int, stock_left: int}>
+     */
+    private function quantitiesSoldByOption(Carbon $from, Carbon $to, string $option, string $emptyLabel): Collection
+    {
+        $expr = $this->variantOptionSql($option);
+        $stockByLabel = $this->stockByOption($option, $emptyLabel);
+
+        $sold = $this->paidOrderItemsForPeriod($from, $to)
+            ->selectRaw("{$expr} as option_value")
+            ->selectRaw('SUM(order_items.quantity) as units_sold')
+            ->groupByRaw($expr)
+            ->orderByDesc('units_sold')
+            ->get()
+            ->map(fn ($row) => (object) [
+                'label' => $this->optionLabel($row->option_value, $emptyLabel),
+                'units_sold' => (int) $row->units_sold,
+            ])
+            ->groupBy('label')
+            ->map(fn (Collection $rows) => (int) $rows->sum('units_sold'));
+
+        return $sold->keys()
+            ->merge($stockByLabel->keys())
+            ->unique()
+            ->map(fn (string $label) => (object) [
+                'label' => $label,
+                'units_sold' => (int) ($sold[$label] ?? 0),
+                'stock_left' => (int) ($stockByLabel[$label] ?? 0),
+            ])
+            ->sortByDesc('units_sold')
+            ->values();
+    }
+
+    /**
+     * @return Collection<string, int>
+     */
+    private function stockByOption(string $option, string $emptyLabel): Collection
+    {
+        return ProductVariant::query()
+            ->select($option)
+            ->selectRaw('SUM(quantity) as stock_left')
+            ->groupBy($option)
+            ->get()
+            ->mapWithKeys(fn ($row) => [
+                $this->optionLabel($row->{$option}, $emptyLabel) => (int) $row->stock_left,
+            ]);
+    }
+
+    private function stockLeftFor(int $productId, string $size, string $color): int
+    {
+        return (int) ($this->variantStockMap()[$this->inventoryKey($productId, $size, $color)] ?? 0);
+    }
+
+    /**
+     * @return Collection<string, int>
+     */
+    private function variantStockMap(): Collection
+    {
+        return $this->variantStockIndex ??= ProductVariant::query()
+            ->get(['product_id', 'size', 'color', 'quantity'])
+            ->groupBy(fn (ProductVariant $variant) => $this->inventoryKey(
+                (int) $variant->product_id,
+                $variant->size,
+                $variant->color,
+            ))
+            ->map(fn (Collection $rows) => (int) $rows->sum('quantity'));
+    }
+
+    private function inventoryKey(int $productId, mixed $size, mixed $color): string
+    {
+        return strtolower(implode('|', [
+            (string) $productId,
+            $this->optionLabel($size, 'No size'),
+            $this->optionLabel($color, 'No color'),
+        ]));
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<OrderItem>
+     */
+    private function paidOrderItemsForPeriod(Carbon $from, Carbon $to): \Illuminate\Database\Eloquent\Builder
+    {
+        return OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.payment_status', PaymentStatus::Paid)
+            ->whereBetween('orders.paid_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
+    }
+
+    private function variantOptionSql(string $key): string
+    {
+        $path = '$.'.$key;
+
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => "json_extract(order_items.variant_options, '{$path}')",
+            'pgsql' => "(order_items.variant_options->>'{$key}')",
+            default => "JSON_UNQUOTE(JSON_EXTRACT(order_items.variant_options, '{$path}'))",
+        };
+    }
+
+    private function optionLabel(mixed $value, string $emptyLabel): string
+    {
+        $label = trim((string) $value);
+
+        return $label === '' || $label === 'null' ? $emptyLabel : $label;
     }
 
     public function growthRate(Carbon $from, Carbon $to): ?float

@@ -214,11 +214,72 @@
     </div>
 
     {{-- Secondary KPIs --}}
-    <div class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <x-admin-kpi-card :label="'Pairs sold · '.$periodLabel" :value="$periodStats['units_sold']" />
         <x-admin-kpi-card label="Total revenue (all time)" :value="$stats['total_sales']" format="currency" />
         <x-admin-kpi-card label="Today's sales" :value="$stats['today_sales']" format="currency" />
         <x-admin-kpi-card label="Paid orders (all time)" :value="$stats['paid_orders']" />
         <x-admin-kpi-card label="Low stock" :value="$stats['low_stock_products']" highlight />
+    </div>
+
+    {{-- Quantities sold by size and color --}}
+    <div class="mt-8 grid gap-6 lg:grid-cols-2">
+        <div class="card overflow-hidden">
+            <x-admin-section-header
+                :title="'Sizes sold · '.$periodLabel"
+                subtitle="Paid sales for this period, with remaining stock by size"
+                :href="route('admin.reports.index', ['from' => $periodFrom->format('Y-m-d'), 'to' => $periodTo->format('Y-m-d')])"
+                link-label="Full report"
+            />
+            @include('admin.partials.sold-quantity-bars', ['rows' => $soldBySize])
+        </div>
+
+        <div class="card overflow-hidden">
+            <x-admin-section-header
+                :title="'Colors sold · '.$periodLabel"
+                subtitle="Paid sales for this period, with remaining stock by color"
+                :href="route('admin.reports.index', ['from' => $periodFrom->format('Y-m-d'), 'to' => $periodTo->format('Y-m-d')])"
+                link-label="Full report"
+            />
+            @include('admin.partials.sold-quantity-bars', ['rows' => $soldByColor])
+        </div>
+    </div>
+
+    <div class="card mt-6 overflow-hidden">
+        <x-admin-section-header
+            :title="'Sold by size and color · '.$periodLabel"
+            subtitle="Paid sales beside current inventory for each size and color"
+            :href="route('admin.reports.index', ['from' => $periodFrom->format('Y-m-d'), 'to' => $periodTo->format('Y-m-d')])"
+            link-label="Full report"
+        />
+        <div class="overflow-x-auto">
+            <table class="admin-data-table">
+                <thead>
+                    <tr>
+                        <th class="admin-table-cell text-left">Product</th>
+                        <th class="admin-table-cell text-left">Size</th>
+                        <th class="admin-table-cell text-left">Color</th>
+                        <th class="admin-table-cell text-right">Qty sold</th>
+                        <th class="admin-table-cell text-right">In stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($soldByVariant as $row)
+                        <tr>
+                            <td class="admin-table-cell font-medium">{{ $row->product_name }}</td>
+                            <td class="admin-table-cell whitespace-nowrap">{{ $row->size }}</td>
+                            <td class="admin-table-cell whitespace-nowrap">{{ $row->color }}</td>
+                            <td class="admin-table-cell whitespace-nowrap text-right font-medium">{{ number_format($row->units_sold) }}</td>
+                            <td class="admin-table-cell whitespace-nowrap text-right {{ $row->stock_left < 10 ? 'font-medium text-brand-red' : '' }}">{{ number_format($row->stock_left) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="admin-table-cell py-8 text-center text-brand-muted">No paid sales {{ strtolower($periodLabel) }}.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     {{-- Status breakdowns --}}
