@@ -51,6 +51,10 @@ function initProductVariantPicker(root) {
     };
 
     const els = {
+        colorDropdown: root.querySelector('[data-variant-color-dropdown]'),
+        colorButton: root.querySelector('[data-variant-color-button]'),
+        colorLabel: root.querySelector('[data-variant-color-label]'),
+        colorMenu: root.querySelector('[data-variant-color-menu]'),
         colorSelect: root.querySelector('[data-variant-color]'),
         heelSection: root.querySelector('[data-variant-heel-section]'),
         heelButtons: root.querySelector('[data-variant-heel-buttons]'),
@@ -68,6 +72,42 @@ function initProductVariantPicker(root) {
 
     function isSizeInStock(size) {
         return variants.some((variant) => optionEquals(variant.size, size) && variant.quantity > 0);
+    }
+
+    function isColorInStock(color) {
+        return variants.some((variant) => optionEquals(variant.color, color) && variant.quantity > 0);
+    }
+
+    function closeColorMenu() {
+        if (!els.colorMenu || !els.colorButton) {
+            return;
+        }
+
+        els.colorMenu.hidden = true;
+        els.colorButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleColorMenu() {
+        if (!els.colorMenu || !els.colorButton) {
+            return;
+        }
+
+        const shouldOpen = els.colorMenu.hidden;
+        els.colorMenu.hidden = !shouldOpen;
+        els.colorButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    }
+
+    function selectColor(color) {
+        const nextColor = color ? String(color) : null;
+
+        if (nextColor && !isColorInStock(nextColor)) {
+            return;
+        }
+
+        state.selectedColor = nextColor;
+        state.selectedHeel = null;
+        closeColorMenu();
+        render();
     }
 
     function showHeelSection() {
@@ -209,11 +249,39 @@ function initProductVariantPicker(root) {
     }
 
     function renderColors() {
+        if (state.selectedColor && !isColorInStock(state.selectedColor)) {
+            state.selectedColor = null;
+        }
+
+        if (els.colorLabel) {
+            els.colorLabel.textContent = state.selectedColor || 'Select color';
+        }
+
+        const colorOptions = root.querySelectorAll('[data-variant-color-option]');
+
+        if (colorOptions.length > 0) {
+            colorOptions.forEach((option) => {
+                const color = option.getAttribute('data-variant-color-option') || '';
+                const isPlaceholder = color === '';
+                const inStock = isPlaceholder || isColorInStock(color);
+                const selected = isPlaceholder
+                    ? !state.selectedColor
+                    : optionEquals(state.selectedColor, color);
+
+                option.disabled = !isPlaceholder && !inStock;
+                option.classList.toggle('is-selected', selected);
+                option.classList.toggle('variant-color-option--unavailable', !isPlaceholder && !inStock);
+                option.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+
+            return;
+        }
+
         if (!els.colorSelect) {
             return;
         }
 
-        const colors = availableColors();
+        const colors = [...new Set(variants.map((variant) => variant.color).filter(Boolean))];
         const current = state.selectedColor && colors.some((color) => optionEquals(color, state.selectedColor))
             ? state.selectedColor
             : '';
@@ -224,6 +292,7 @@ function initProductVariantPicker(root) {
             const option = document.createElement('option');
             option.value = color;
             option.textContent = color;
+            option.disabled = !isColorInStock(color);
 
             if (optionEquals(color, current)) {
                 option.selected = true;
@@ -372,14 +441,40 @@ function initProductVariantPicker(root) {
 
             state.quantity += 1;
             render();
+
+            return;
+        }
+
+        const colorOption = event.target.closest('[data-variant-color-option]');
+
+        if (colorOption && root.contains(colorOption)) {
+            event.preventDefault();
+            selectColor(colorOption.getAttribute('data-variant-color-option') || '');
+
+            return;
+        }
+
+        if (event.target.closest('[data-variant-color-button]') && root.contains(event.target)) {
+            event.preventDefault();
+            toggleColorMenu();
         }
     });
 
-    els.colorSelect?.addEventListener('change', () => {
-        state.selectedColor = els.colorSelect.value || null;
-        state.selectedHeel = null;
-        render();
+    document.addEventListener('click', (event) => {
+        if (!els.colorDropdown || els.colorDropdown.contains(event.target)) {
+            return;
+        }
+
+        closeColorMenu();
     });
+
+    els.colorSelect?.addEventListener('change', () => {
+        selectColor(els.colorSelect.value || '');
+    });
+
+    if (state.selectedColor && !isColorInStock(state.selectedColor)) {
+        state.selectedColor = null;
+    }
 
     if (state.selectedSize && !isSizeInStock(state.selectedSize)) {
         state.selectedSize = null;

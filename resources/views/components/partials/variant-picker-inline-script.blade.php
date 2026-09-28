@@ -21,7 +21,10 @@
     };
 
     const els = {
-        colorSelect: root.querySelector('[data-variant-color]'),
+        colorDropdown: root.querySelector('[data-variant-color-dropdown]'),
+        colorButton: root.querySelector('[data-variant-color-button]'),
+        colorLabel: root.querySelector('[data-variant-color-label]'),
+        colorMenu: root.querySelector('[data-variant-color-menu]'),
         sizeSection: root.querySelector('[data-variant-size-section]'),
         sizeOptions: root.querySelector('[data-variant-size-options]'),
         heelSection: root.querySelector('[data-variant-heel-section]'),
@@ -70,6 +73,45 @@
         }
 
         return isSizeInStockForColor(size, state.selectedColor);
+    }
+
+    function isColorInStock(color) {
+        return variants.some((variant) =>
+            optionEquals(variant.color, color) && variant.quantity > 0,
+        );
+    }
+
+    function closeColorMenu() {
+        if (!els.colorMenu || !els.colorButton) {
+            return;
+        }
+
+        els.colorMenu.hidden = true;
+        els.colorButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleColorMenu() {
+        if (!els.colorMenu || !els.colorButton) {
+            return;
+        }
+
+        const shouldOpen = els.colorMenu.hidden;
+        els.colorMenu.hidden = !shouldOpen;
+        els.colorButton.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    }
+
+    function selectColor(color) {
+        const nextColor = color ? String(color) : null;
+
+        if (nextColor && !isColorInStock(nextColor)) {
+            return;
+        }
+
+        state.selectedColor = nextColor;
+        state.selectedSize = null;
+        state.selectedHeel = null;
+        closeColorMenu();
+        render();
     }
 
     function showHeelSection() {
@@ -327,6 +369,26 @@
         renderSizeRadios();
     }
 
+    function renderColors() {
+        if (els.colorLabel) {
+            els.colorLabel.textContent = state.selectedColor || 'Select color';
+        }
+
+        root.querySelectorAll('[data-variant-color-option]').forEach((option) => {
+            const color = option.getAttribute('data-variant-color-option') || '';
+            const isPlaceholder = color === '';
+            const inStock = isPlaceholder || isColorInStock(color);
+            const selected = isPlaceholder
+                ? !state.selectedColor
+                : optionEquals(state.selectedColor, color);
+
+            option.disabled = !isPlaceholder && !inStock;
+            option.classList.toggle('is-selected', selected);
+            option.classList.toggle('variant-color-option--unavailable', !isPlaceholder && !inStock);
+            option.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+    }
+
     function renderHeels() {
         if (!els.heelSection || !els.heelButtons) {
             return;
@@ -361,10 +423,7 @@
     }
 
     function render() {
-        if (els.colorSelect && state.selectedColor) {
-            els.colorSelect.value = state.selectedColor;
-        }
-
+        renderColors();
         renderSizes();
         renderHeels();
 
@@ -471,15 +530,42 @@
 
             state.quantity += 1;
             render();
+
+            return;
+        }
+
+        const colorOption = event.target.closest('[data-variant-color-option]');
+
+        if (colorOption && root.contains(colorOption)) {
+            event.preventDefault();
+            selectColor(colorOption.getAttribute('data-variant-color-option') || '');
+
+            return;
+        }
+
+        if (event.target.closest('[data-variant-color-button]') && root.contains(event.target)) {
+            event.preventDefault();
+            toggleColorMenu();
         }
     });
 
-    els.colorSelect?.addEventListener('change', () => {
-        state.selectedColor = els.colorSelect.value || null;
-        state.selectedSize = null;
-        state.selectedHeel = null;
-        render();
+    document.addEventListener('click', (event) => {
+        if (!els.colorDropdown || els.colorDropdown.contains(event.target)) {
+            return;
+        }
+
+        closeColorMenu();
     });
+
+    els.colorButton?.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeColorMenu();
+        }
+    });
+
+    if (state.selectedColor && !isColorInStock(state.selectedColor)) {
+        state.selectedColor = null;
+    }
 
     if (state.selectedSize && state.selectedColor && !isSizeInStockForColor(state.selectedSize, state.selectedColor)) {
         state.selectedSize = null;

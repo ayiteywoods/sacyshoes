@@ -21,15 +21,24 @@
         $color = (string) ($variant['color'] ?? '');
         $key = strtolower(trim($color));
 
-        if ($key === '' || isset($seenColors[$key])) {
+        if ($key === '') {
             continue;
         }
 
-        $seenColors[$key] = true;
-        $allColors[] = $color;
+        if (! isset($seenColors[$key])) {
+            $seenColors[$key] = [
+                'value' => $color,
+                'in_stock' => false,
+            ];
+        }
+
+        if ((int) ($variant['quantity'] ?? 0) > 0) {
+            $seenColors[$key]['in_stock'] = true;
+        }
     }
 
-    usort($allColors, 'strnatcasecmp');
+    $allColors = array_values($seenColors);
+    usort($allColors, fn ($left, $right) => strnatcasecmp($left['value'], $right['value']));
 
     $pickerConfig = [
         'variants' => $variants->values()->all(),
@@ -100,6 +109,90 @@
         background-color: #e10600 !important;
         color: #fff !important;
     }
+
+    #{{ $pickerId }} .variant-color-dropdown {
+        position: relative;
+        width: 100%;
+        max-width: 9rem;
+    }
+
+    #{{ $pickerId }} .variant-color-button {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    #{{ $pickerId }} .variant-color-button[aria-expanded="true"] .variant-color-chevron {
+        transform: rotate(180deg);
+    }
+
+    #{{ $pickerId }} .variant-color-chevron {
+        flex-shrink: 0;
+        width: 1rem;
+        height: 1rem;
+        opacity: 0.55;
+        transition: transform 150ms;
+    }
+
+    #{{ $pickerId }} .variant-color-menu {
+        position: absolute;
+        left: 0;
+        z-index: 40;
+        margin-top: 0.25rem;
+        min-width: 14rem;
+        max-height: 16rem;
+        overflow-y: auto;
+        border: 1px solid #e5e5e5;
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+        padding: 0.25rem 0;
+    }
+
+    #{{ $pickerId }} .variant-color-option {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        color: #111;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    #{{ $pickerId }} .variant-color-option:hover,
+    #{{ $pickerId }} .variant-color-option:focus-visible {
+        background: #f5f5f5;
+        outline: none;
+    }
+
+    #{{ $pickerId }} .variant-color-option.is-selected {
+        background: #e10600;
+        color: #fff;
+    }
+
+    #{{ $pickerId }} .variant-color-option.is-selected:hover,
+    #{{ $pickerId }} .variant-color-option.is-selected:focus-visible {
+        background: #e10600;
+        color: #fff;
+    }
+
+    #{{ $pickerId }} .variant-color-option--unavailable {
+        color: #737373;
+        text-decoration: line-through;
+        cursor: not-allowed;
+    }
+
+    #{{ $pickerId }} .variant-color-option--unavailable:hover,
+    #{{ $pickerId }} .variant-color-option--unavailable:focus-visible {
+        background: transparent;
+        color: #737373;
+    }
 </style>
 
 <div
@@ -109,17 +202,47 @@
 >
     <div>
         <div class="flex items-center gap-4">
-            <label for="variant-color-{{ $product->id }}" class="shrink-0 text-sm lowercase text-brand-muted">color</label>
-            <select
-                id="variant-color-{{ $product->id }}"
-                data-variant-color
-                class="input-field mt-0 w-full max-w-[9rem]"
-            >
-                <option value="">Select color</option>
-                @foreach ($allColors as $color)
-                    <option value="{{ $color }}" @selected(old('variant_color') === $color)>{{ $color }}</option>
-                @endforeach
-            </select>
+            <span id="variant-color-label-{{ $product->id }}" class="shrink-0 text-sm lowercase text-brand-muted">color</span>
+            <div class="variant-color-dropdown" data-variant-color-dropdown>
+                <button
+                    type="button"
+                    id="variant-color-{{ $product->id }}"
+                    class="input-field variant-color-button mt-0"
+                    data-variant-color-button
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-labelledby="variant-color-label-{{ $product->id }} variant-color-{{ $product->id }}"
+                >
+                    <span data-variant-color-label>{{ old('variant_color') ?: 'Select color' }}</span>
+                    <svg class="variant-color-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <ul class="variant-color-menu" data-variant-color-menu role="listbox" hidden>
+                    <li>
+                        <button
+                            type="button"
+                            class="variant-color-option"
+                            data-variant-color-option=""
+                            role="option"
+                            aria-selected="{{ old('variant_color') ? 'false' : 'true' }}"
+                        >Select color</button>
+                    </li>
+                    @foreach ($allColors as $color)
+                        <li>
+                            <button
+                                type="button"
+                                class="variant-color-option @if (! $color['in_stock']) variant-color-option--unavailable @endif"
+                                data-variant-color-option="{{ $color['value'] }}"
+                                data-in-stock="{{ $color['in_stock'] ? 'true' : 'false' }}"
+                                role="option"
+                                aria-selected="{{ old('variant_color') === $color['value'] ? 'true' : 'false' }}"
+                                @disabled(! $color['in_stock'])
+                            >{{ $color['value'] }}</button>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
     </div>
 

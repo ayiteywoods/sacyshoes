@@ -3,10 +3,9 @@
 namespace App\Services;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\UserRole;
-use App\Mail\OrderStatusMail;
 use App\Mail\PaymentReceivedMail;
-use App\Mail\WelcomeMail;
 use App\Models\EmailTemplate;
 use App\Models\Order;
 use App\Models\User;
@@ -16,17 +15,21 @@ class OrderNotificationService
 {
     public function welcome(User $user): void
     {
-        Mail::to($user->email)->sendNow(new WelcomeMail($user));
+        // Customers only receive the invoice email after payment.
     }
 
     public function orderCreated(Order $order): void
     {
-        // Customers are only emailed after payment is confirmed.
+        // Customers only receive the invoice email after payment.
     }
 
     public function paymentReceived(Order $order): void
     {
         $order->loadMissing('items');
+
+        if ($order->payment_status !== PaymentStatus::Paid) {
+            return;
+        }
 
         $email = $order->customerEmail();
 
@@ -46,26 +49,7 @@ class OrderNotificationService
 
     public function orderStatusChanged(Order $order, OrderStatus $previousStatus): void
     {
-        if ($order->status === $previousStatus) {
-            return;
-        }
-
-        $email = $order->customerEmail();
-
-        if (! $email || $this->isExcludedInbox($email)) {
-            return;
-        }
-
-        $order->loadMissing('items');
-
-        match ($order->status) {
-            OrderStatus::Processing,
-            OrderStatus::ReadyForDelivery,
-            OrderStatus::Shipped,
-            OrderStatus::Delivered => Mail::to($email)->sendNow(new OrderStatusMail($order, $previousStatus)),
-            OrderStatus::Cancelled => $this->orderCancelled($order, $previousStatus),
-            default => null,
-        };
+        // Customers only receive the invoice email after payment.
     }
 
     public function orderCancelledUnpaid(Order $order): void
