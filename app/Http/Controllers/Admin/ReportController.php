@@ -22,8 +22,16 @@ class ReportController extends Controller
 
         $summary = $reports->periodSummary($from, $to);
         $growth = $reports->growthRate($from, $to);
-        $soldBySize = $reports->quantitiesSoldBySize($from, $to);
-        $soldByColor = $reports->quantitiesSoldByColor($from, $to);
+        $soldBySize = $reports->paginateQuantityRows(
+            $reports->quantitiesSoldBySize($from, $to),
+            10,
+            'size_page',
+        )->withQueryString();
+        $soldByColor = $reports->paginateQuantityRows(
+            $reports->quantitiesSoldByColor($from, $to),
+            10,
+            'color_page',
+        )->withQueryString();
         $soldByVariant = AdminTable::paginate(
             $reports->quantitiesSoldByVariantQuery($from, $to),
             $request,

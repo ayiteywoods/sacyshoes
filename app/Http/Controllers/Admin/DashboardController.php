@@ -19,6 +19,8 @@ class DashboardController extends Controller
 {
     private const LIST_PER_PAGE = 5;
 
+    private const QUANTITY_LIST_PER_PAGE = 10;
+
     public function __invoke(Request $request, AdminReportService $reports, AdminNotificationService $notifications, AdminActivityService $activity): View
     {
         $period = in_array($request->string('period')->toString(), ['today', '7d', '30d', 'month'], true)
@@ -42,8 +44,16 @@ class DashboardController extends Controller
             ->paginate(self::LIST_PER_PAGE, ['*'], 'top_selling_page')
             ->withQueryString();
 
-        $soldBySize = $reports->quantitiesSoldBySize($from, $to);
-        $soldByColor = $reports->quantitiesSoldByColor($from, $to);
+        $soldBySize = $reports->paginateQuantityRows(
+            $reports->quantitiesSoldBySize($from, $to),
+            self::QUANTITY_LIST_PER_PAGE,
+            'size_page',
+        )->withQueryString();
+        $soldByColor = $reports->paginateQuantityRows(
+            $reports->quantitiesSoldByColor($from, $to),
+            self::QUANTITY_LIST_PER_PAGE,
+            'color_page',
+        )->withQueryString();
         $soldByVariant = $reports->quantitiesSoldByVariant($from, $to, 8);
 
         $recentOrders = Order::query()

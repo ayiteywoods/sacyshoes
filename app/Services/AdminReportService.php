@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -386,6 +387,26 @@ class AdminReportService
     public function quantitiesSoldByColor(Carbon $from, Carbon $to): Collection
     {
         return $this->quantitiesSoldByOption($from, $to, 'color', 'No color');
+    }
+
+    /**
+     * @param  Collection<int, object>  $rows
+     * @return LengthAwarePaginator<int, object>
+     */
+    public function paginateQuantityRows(Collection $rows, int $perPage, string $pageName): LengthAwarePaginator
+    {
+        $page = LengthAwarePaginator::resolveCurrentPage($pageName);
+
+        return new LengthAwarePaginator(
+            $rows->forPage($page, $perPage)->values(),
+            $rows->count(),
+            $perPage,
+            $page,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => $pageName,
+            ],
+        );
     }
 
     /**

@@ -61,10 +61,12 @@
         <div class="card overflow-hidden">
             <x-admin-section-header title="Sizes sold" subtitle="Paid sales for this period, with remaining stock by size" />
             @include('admin.partials.sold-quantity-bars', ['rows' => $soldBySize])
+            <x-admin-pagination :paginator="$soldBySize" class="border-t border-neutral-100 px-4 py-3 sm:px-6" />
         </div>
         <div class="card overflow-hidden">
             <x-admin-section-header title="Colors sold" subtitle="Paid sales for this period, with remaining stock by color" />
             @include('admin.partials.sold-quantity-bars', ['rows' => $soldByColor])
+            <x-admin-pagination :paginator="$soldByColor" class="border-t border-neutral-100 px-4 py-3 sm:px-6" />
         </div>
     </div>
 
