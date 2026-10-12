@@ -154,8 +154,9 @@
                                 type="text"
                                 name="shipping_city"
                                 value="{{ old('shipping_city', old('billing_city', $billing['billing_city'] ?? '')) }}"
+                                placeholder="eg: Accra, Kumasi"
                                 required
-                                class="input-field"
+                                class="input-field placeholder:text-brand-muted"
                             >
                             @error('shipping_city')
                                 <p class="mt-1 text-xs text-brand-red">{{ $message }}</p>
@@ -169,8 +170,9 @@
                                 type="text"
                                 name="shipping_address"
                                 value="{{ old('shipping_address', old('billing_address', $billing['billing_address'] ?? '')) }}"
+                                placeholder="eg: Lapaz"
                                 required
-                                class="input-field"
+                                class="input-field placeholder:text-brand-muted"
                             >
                             @error('shipping_address')
                                 <p class="mt-1 text-xs text-brand-red">{{ $message }}</p>
@@ -313,8 +315,9 @@
                                 type="text"
                                 name="billing_city"
                                 value="{{ old('billing_city', $billing['billing_city'] ?? '') }}"
+                                placeholder="eg: Accra, Kumasi"
                                 :required="!sameAsShipping"
-                                class="input-field"
+                                class="input-field placeholder:text-brand-muted"
                             >
                             @error('billing_city')
                                 <p class="mt-1 text-xs text-brand-red">{{ $message }}</p>
@@ -328,8 +331,9 @@
                                 type="text"
                                 name="billing_address"
                                 value="{{ old('billing_address', $billing['billing_address'] ?? '') }}"
+                                placeholder="eg: Lapaz"
                                 :required="!sameAsShipping"
-                                class="input-field"
+                                class="input-field placeholder:text-brand-muted"
                             >
                             @error('billing_address')
                                 <p class="mt-1 text-xs text-brand-red">{{ $message }}</p>
