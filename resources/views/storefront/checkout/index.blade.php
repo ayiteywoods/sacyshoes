@@ -48,7 +48,7 @@
                 <form
                     action="{{ route('checkout.store') }}"
                     method="POST"
-                    class="card p-6"
+                    class="card min-w-0 p-4 sm:p-6"
                     @submit="syncBillingFromShipping()"
                 >
                     @csrf
@@ -67,7 +67,7 @@
                     <h2 class="page-heading">Shipping Information</h2>
                     <p class="mt-2 text-xs text-brand-muted">Fields marked with <span class="text-brand-red">*</span> are required.</p>
 
-                    <div class="mt-6 grid gap-5 sm:grid-cols-2">
+                    <div class="mt-6 grid min-w-0 gap-5 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <x-form-label for="shipping_full_name" class="text-xs uppercase tracking-wide text-brand-muted" :required="true">Full Name</x-form-label>
                             <input
@@ -170,7 +170,7 @@
                                 type="text"
                                 name="shipping_address"
                                 value="{{ old('shipping_address', old('billing_address', $billing['billing_address'] ?? '')) }}"
-                                placeholder="eg: Lapaz"
+                                placeholder="eg: Lapaz or East Legon or Osu"
                                 required
                                 class="input-field placeholder:text-brand-muted"
                             >
@@ -247,7 +247,7 @@
                     <div x-show="!sameAsShipping" x-cloak>
                         <h2 class="page-heading mt-8">Billing Information</h2>
 
-                        <div class="mt-6 grid gap-5 sm:grid-cols-2">
+                        <div class="mt-6 grid min-w-0 gap-5 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <x-form-label for="billing_full_name" class="text-xs uppercase tracking-wide text-brand-muted" :required="true">Full Name</x-form-label>
                             <input
@@ -331,7 +331,7 @@
                                 type="text"
                                 name="billing_address"
                                 value="{{ old('billing_address', $billing['billing_address'] ?? '') }}"
-                                placeholder="eg: Lapaz"
+                                placeholder="eg: Lapaz or East Legon or Osu"
                                 :required="!sameAsShipping"
                                 class="input-field placeholder:text-brand-muted"
                             >

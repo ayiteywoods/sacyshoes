@@ -4,7 +4,7 @@
 @section('subheading', $template->description)
 
 @section('content')
-    <form method="POST" action="{{ route('admin.email-templates.update', $template) }}" class="card max-w-3xl space-y-4 p-6">
+    <form method="POST" action="{{ route('admin.email-templates.update', $template) }}" class="card w-full min-w-0 max-w-3xl space-y-4 p-4 sm:p-6">
         @csrf
         @method('PUT')
 
@@ -39,7 +39,7 @@
         </div>
     </form>
 
-    <form method="POST" action="{{ route('admin.email-templates.send-test', $template) }}" class="card mt-6 max-w-3xl space-y-4 p-6">
+    <form method="POST" action="{{ route('admin.email-templates.send-test', $template) }}" class="card mt-6 w-full min-w-0 max-w-3xl space-y-4 p-4 sm:p-6">
         @csrf
 
         <div>

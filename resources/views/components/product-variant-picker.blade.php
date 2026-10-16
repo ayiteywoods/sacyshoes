@@ -143,7 +143,9 @@
         left: 0;
         z-index: 40;
         margin-top: 0.25rem;
-        min-width: 14rem;
+        min-width: 100%;
+        width: max-content;
+        max-width: min(16rem, calc(100vw - 2rem));
         max-height: 16rem;
         overflow-y: auto;
         border: 1px solid #e5e5e5;

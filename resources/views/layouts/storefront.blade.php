@@ -193,7 +193,7 @@
         </div>
     @endif
 
-    <main>
+    <main class="min-w-0 overflow-x-hidden">
         @yield('content')
     </main>
 

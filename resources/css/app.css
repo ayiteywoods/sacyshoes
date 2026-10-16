@@ -197,11 +197,11 @@
     }
 
     .input-field {
-        @apply mt-1 w-full rounded-none border border-neutral-300 px-3 py-2 text-sm focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/20;
+        @apply mt-1 w-full min-w-0 max-w-full rounded-none border border-neutral-300 px-3 py-2 text-sm focus:border-brand-red focus:outline-none focus:ring-2 focus:ring-brand-red/20;
     }
 
     .card {
-        @apply rounded-none border border-neutral-200 bg-white;
+        @apply min-w-0 max-w-full rounded-none border border-neutral-200 bg-white;
     }
 
     .account-layout {
@@ -285,7 +285,7 @@
     }
 
     .admin-main {
-        @apply flex min-h-screen flex-1 flex-col transition-[padding] duration-200 ease-in-out lg:pl-64;
+        @apply flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden transition-[padding] duration-200 ease-in-out lg:pl-64;
     }
 
     .admin-main-collapsed {
@@ -809,6 +809,13 @@
     .product-detail-layout {
         display: grid;
         gap: 1.5rem;
+        min-width: 0;
+    }
+
+    .product-detail-gallery,
+    .product-detail-purchase {
+        min-width: 0;
+        max-width: 100%;
     }
 
     @media (min-width: 1024px) {

@@ -6,12 +6,12 @@
     @include('storefront.partials.product-hero')
 
     <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div class="product-detail-layout">
-            <div class="product-detail-gallery card p-4 sm:p-5">
+        <div class="product-detail-layout min-w-0">
+            <div class="product-detail-gallery card min-w-0 p-4 sm:p-5">
                 <x-product-gallery :product="$product" />
             </div>
 
-            <div class="product-detail-purchase card p-6 sm:p-8">
+            <div class="product-detail-purchase card min-w-0 p-4 sm:p-8">
                 @if ($product->discount_price)
                     <span class="inline-block rounded-none bg-brand-red px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Sale</span>
                 @endif

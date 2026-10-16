@@ -3,7 +3,7 @@
 @section('heading', 'Edit '.$section->name)
 
 @section('content')
-    <form method="POST" action="{{ route('admin.home-sections.update', $section) }}" enctype="multipart/form-data" class="card max-w-3xl space-y-4 p-6">
+    <form method="POST" action="{{ route('admin.home-sections.update', $section) }}" enctype="multipart/form-data" class="card w-full min-w-0 max-w-3xl space-y-4 p-4 sm:p-6">
         @csrf
         @method('PUT')
 
