@@ -164,7 +164,7 @@
                 </div>
             @endif
 
-            <main class="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6">
+            <main class="flex-1 p-4 sm:p-6">
                 @yield('content')
             </main>
 
@@ -176,24 +176,31 @@
 
     <style>
         [x-cloak] { display: none !important; }
-        .admin-main .card,
-        .admin-main form {
-            min-width: 0;
-            max-width: 100%;
-        }
-        .admin-main .grid {
-            min-width: 0;
-        }
-        .admin-main .grid > * {
-            min-width: 0;
-        }
-        .admin-main .input-field,
-        .admin-main input,
-        .admin-main select,
-        .admin-main textarea {
-            max-width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
+
+        @media (max-width: 767px) {
+            .admin-main {
+                overflow-x: hidden;
+            }
+
+            .admin-main .card,
+            .admin-main form {
+                min-width: 0;
+                max-width: 100%;
+            }
+
+            .admin-main .grid,
+            .admin-main .grid > * {
+                min-width: 0;
+            }
+
+            .admin-main .input-field,
+            .admin-main input,
+            .admin-main select,
+            .admin-main textarea {
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }
         }
     </style>
     @stack('scripts')

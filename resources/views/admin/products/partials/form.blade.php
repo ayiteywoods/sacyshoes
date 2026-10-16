@@ -1,7 +1,7 @@
 @php($product = $product ?? null)
 
 <div class="grid min-w-0 gap-4 sm:grid-cols-2">
-    <div class="min-w-0 sm:col-span-2">
+    <div class="sm:col-span-2">
         <x-form-label :required="true">Name</x-form-label>
         <input type="text" name="name" value="{{ old('name', $product?->name) }}" required class="input-field">
         @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -45,7 +45,7 @@
             readonly
             class="input-field bg-neutral-50"
         >
-        <p class="mt-1 text-xs leading-relaxed text-brand-muted">Calculated automatically from size and color options below.</p>
+        <p class="mt-1 text-xs text-brand-muted">Calculated automatically from size and color options below.</p>
     </div>
 
     <div>
@@ -58,14 +58,14 @@
         @error('status')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
     </div>
 
-    <div class="min-w-0 rounded border border-neutral-200 bg-neutral-50 p-4 sm:col-span-2">
+    <div class="sm:col-span-2 rounded border border-neutral-200 bg-neutral-50 p-4">
         <h3 class="text-sm font-semibold">Storefront publish schedule</h3>
         <p class="mt-1 text-xs text-brand-muted">
             Optional. The product appears on the shop when status is Active and this date and time have passed.
             Leave blank to publish immediately.
         </p>
 
-        <div class="mt-4 grid min-w-0 gap-4 sm:grid-cols-2">
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
                 <label for="publish_date" class="block text-sm font-medium">Publish date</label>
                 <input
@@ -93,15 +93,15 @@
         <p class="mt-2 text-xs text-brand-muted">Times use {{ config('app.timezone') }}.</p>
     </div>
 
-    <div class="min-w-0 sm:col-span-2">
+    <div class="sm:col-span-2">
         <label class="block text-sm font-medium">Description</label>
         <textarea name="description" rows="5" class="input-field">{{ old('description', $product?->description) }}</textarea>
         @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
     </div>
 
-    <div class="min-w-0 sm:col-span-2">
+    <div class="sm:col-span-2">
         <label class="block text-sm font-medium">Product images</label>
-        <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.gif,.webp,.bmp,.avif,.heic,.heif" multiple class="mt-1 w-full max-w-full text-sm">
+        <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,image/avif,image/heic,image/heif,.jpg,.jpeg,.png,.gif,.webp,.bmp,.avif,.heic,.heif" multiple class="mt-1 w-full text-sm">
         <p class="mt-1 text-xs text-brand-muted">Upload JPG, PNG, GIF, WebP, AVIF, or HEIC. Large images are automatically compressed to {{ \App\Support\ImageUpload::targetLabel(4096) }} each.</p>
         @if ($product?->images?->isNotEmpty())
             <div class="mt-4 flex flex-wrap gap-3">
@@ -130,57 +130,65 @@
         'sku' => '',
         'is_active' => true,
     ]])))">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div class="min-w-0">
+        <div class="flex items-center justify-between gap-3">
+            <div>
                 <label class="block text-sm font-medium">Size & color options<span class="text-brand-red" aria-hidden="true"> *</span></label>
-                <p class="mt-1 text-xs leading-relaxed text-brand-muted">Add the combinations customers can choose from. Size is optional — leave it blank if the product has no sizes. Color is required. Heel length is optional.</p>
+                <p class="mt-1 text-xs text-brand-muted">Add the combinations customers can choose from. Size is optional — leave it blank if the product has no sizes. Color is required. Heel length is optional.</p>
             </div>
-            <button type="button" class="btn-outline shrink-0 px-3 py-2 text-xs" @click="addRow()">Add option</button>
+            <button type="button" class="btn-outline px-3 py-2 text-xs" @click="addRow()">Add option</button>
         </div>
 
-        <div class="mt-4 space-y-3">
-            <template x-for="(row, index) in rows" :key="index">
-                <div class="grid grid-cols-2 gap-3 border border-neutral-200 p-3 sm:grid-cols-12">
-                    <input type="hidden" :name="`variants[${index}][id]`" :value="row.id || ''">
-
-                    <div class="min-w-0 sm:col-span-2">
-                        <label class="text-xs text-brand-muted">Size <span class="normal-case">(optional)</span></label>
-                        <input type="text" :name="`variants[${index}][size]`" x-model="row.size" list="product-sizes" placeholder="Optional" class="input-field">
-                    </div>
-                    <div class="min-w-0 sm:col-span-2">
-                        <label class="text-xs text-brand-muted">Color <span class="text-brand-red">*</span></label>
-                        <input
-                            type="text"
-                            :name="`variants[${index}][color]`"
-                            x-model="row.color"
-                            autocomplete="off"
-                            placeholder="e.g. Black"
-                            required
-                            class="input-field"
-                        >
-                    </div>
-                    <div class="min-w-0 sm:col-span-2">
-                        <label class="text-xs text-brand-muted">Heel length <span class="normal-case">(optional)</span></label>
-                        <input type="text" :name="`variants[${index}][heel_length]`" x-model="row.heel_length" list="product-heel-lengths" placeholder="Optional" class="input-field">
-                    </div>
-                    <div class="min-w-0 sm:col-span-1">
-                        <label class="text-xs text-brand-muted">Qty <span class="text-brand-red">*</span></label>
-                        <input type="number" :name="`variants[${index}][quantity]`" x-model="row.quantity" min="0" required class="input-field">
-                    </div>
-                    <div class="col-span-2 min-w-0 sm:col-span-3">
-                        <label class="text-xs text-brand-muted">SKU</label>
-                        <input type="text" :name="`variants[${index}][sku]`" x-model="row.sku" placeholder="Auto" class="input-field">
-                    </div>
-                    <div class="col-span-2 flex items-center justify-between gap-3 sm:col-span-2 sm:flex-col sm:items-start sm:justify-end">
-                        <label class="inline-flex items-center gap-2 text-xs text-brand-muted">
-                            <input type="hidden" :name="`variants[${index}][is_active]`" :value="row.is_active ? 1 : 0">
-                            <input type="checkbox" x-model="row.is_active" class="rounded-none border-neutral-300 text-brand-red focus:ring-brand-red">
-                            Active
-                        </label>
-                        <button type="button" class="text-xs text-brand-red hover:underline" @click="removeRow(index)" x-show="rows.length > 1">Remove</button>
-                    </div>
-                </div>
-            </template>
+        <div class="mt-4 min-w-0 overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="border-b border-neutral-200 text-left text-xs uppercase tracking-wide text-brand-muted">
+                    <tr>
+                        <th class="px-2 py-2">Size <span class="normal-case text-brand-muted">(optional)</span></th>
+                        <th class="px-2 py-2">Color <span class="text-brand-red">*</span></th>
+                        <th class="px-2 py-2">Heel length <span class="normal-case text-brand-muted">(optional)</span></th>
+                        <th class="px-2 py-2">Qty <span class="text-brand-red">*</span></th>
+                        <th class="px-2 py-2">SKU</th>
+                        <th class="px-2 py-2">Active</th>
+                        <th class="px-2 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(row, index) in rows" :key="index">
+                        <tr class="border-b border-neutral-100">
+                            <td class="px-2 py-2">
+                                <input type="hidden" :name="`variants[${index}][id]`" :value="row.id || ''">
+                                <input type="text" :name="`variants[${index}][size]`" x-model="row.size" list="product-sizes" placeholder="Optional" class="input-field min-w-[5rem]">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input
+                                    type="text"
+                                    :name="`variants[${index}][color]`"
+                                    x-model="row.color"
+                                    autocomplete="off"
+                                    placeholder="e.g. Black"
+                                    required
+                                    class="input-field min-w-[6rem]"
+                                >
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="text" :name="`variants[${index}][heel_length]`" x-model="row.heel_length" list="product-heel-lengths" placeholder="Optional" class="input-field min-w-[6rem]">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="number" :name="`variants[${index}][quantity]`" x-model="row.quantity" min="0" required class="input-field w-20">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="text" :name="`variants[${index}][sku]`" x-model="row.sku" placeholder="Auto" class="input-field min-w-[8rem]">
+                            </td>
+                            <td class="px-2 py-2 text-center">
+                                <input type="hidden" :name="`variants[${index}][is_active]`" :value="row.is_active ? 1 : 0">
+                                <input type="checkbox" x-model="row.is_active" class="rounded-none border-neutral-300 text-brand-red focus:ring-brand-red">
+                            </td>
+                            <td class="px-2 py-2">
+                                <button type="button" class="text-xs text-brand-red hover:underline" @click="removeRow(index)" x-show="rows.length > 1">Remove</button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
         </div>
 
         <datalist id="product-sizes">

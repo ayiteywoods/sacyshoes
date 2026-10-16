@@ -8,7 +8,7 @@
         method="POST"
         action="{{ route('admin.store-settings.update') }}"
         enctype="multipart/form-data"
-        class="grid min-w-0 max-w-5xl gap-6 lg:grid-cols-2"
+        class="grid max-w-5xl gap-6 lg:grid-cols-2"
     >
         @csrf
         @method('PUT')

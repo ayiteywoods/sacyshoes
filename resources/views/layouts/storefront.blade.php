@@ -193,7 +193,7 @@
         </div>
     @endif
 
-    <main class="min-w-0 overflow-x-hidden">
+    <main>
         @yield('content')
     </main>
 
@@ -278,7 +278,32 @@
         </div>
     </footer>
 
-    <style>[x-cloak] { display: none !important; }</style>
+    <style>
+        [x-cloak] { display: none !important; }
+
+        @media (max-width: 767px) {
+            main {
+                overflow-x: hidden;
+            }
+
+            .card,
+            form,
+            .grid,
+            .grid > * {
+                min-width: 0;
+                max-width: 100%;
+            }
+
+            .input-field,
+            input,
+            select,
+            textarea {
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }
+        }
+    </style>
     @stack('scripts')
 </body>
 </html>
