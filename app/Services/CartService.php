@@ -54,20 +54,28 @@ class CartService
 
         DB::transaction(function () use ($guestCart, $userCart) {
             foreach ($guestCart->items as $guestItem) {
+                $available = $guestItem->variant
+                    ? $this->stock->sellableQuantity($guestItem->variant)
+                    : 0;
+
+                if ($available <= 0) {
+                    continue;
+                }
+
                 $existing = $userCart->items()
                     ->where('product_variant_id', $guestItem->product_variant_id)
                     ->first();
 
                 if ($existing) {
                     $existing->update([
-                        'quantity' => $existing->quantity + $guestItem->quantity,
+                        'quantity' => min($available, $existing->quantity + $guestItem->quantity),
                         'unit_price' => $guestItem->unit_price,
                     ]);
                 } else {
                     $userCart->items()->create([
                         'product_id' => $guestItem->product_id,
                         'product_variant_id' => $guestItem->product_variant_id,
-                        'quantity' => $guestItem->quantity,
+                        'quantity' => min($available, $guestItem->quantity),
                         'unit_price' => $guestItem->unit_price,
                     ]);
                 }

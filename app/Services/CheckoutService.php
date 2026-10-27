@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\ProductVariant;
 use App\Models\ShippingOption;
 use App\Models\ShippingRegion;
 use App\Models\User;
@@ -21,6 +22,7 @@ class CheckoutService
     public function __construct(
         protected CartService $cart,
         protected CouponService $coupons,
+        protected StockReservationService $stock,
     ) {}
 
     public function getCartWithItems(): Cart
@@ -93,37 +95,6 @@ class CheckoutService
             ]);
         }
 
-        foreach ($cart->items as $item) {
-            $product = $item->product->fresh();
-            $variant = $item->variant?->fresh();
-
-            if (! $variant) {
-                throw ValidationException::withMessages([
-                    'cart' => "{$product->name} is missing a size or color. Please update your cart.",
-                ]);
-            }
-
-            if (! $product->isActive() || ! $variant->is_active) {
-                throw ValidationException::withMessages([
-                    'cart' => "{$product->name} ({$variant->displayLabel()}) is no longer available.",
-                ]);
-            }
-
-            $available = app(StockReservationService::class)->sellableQuantity($variant);
-
-            if ($available <= 0) {
-                throw ValidationException::withMessages([
-                    'cart' => "{$product->name} ({$variant->displayLabel()}) is out of stock.",
-                ]);
-            }
-
-            if ($item->quantity > $available) {
-                throw ValidationException::withMessages([
-                    'cart' => "Only {$available} of {$product->name} ({$variant->displayLabel()}) available in stock.",
-                ]);
-            }
-        }
-
         $deliveryFee = $this->resolveDeliveryFee(
             (int) ($data['shipping_region_id'] ?? 0),
             $data['shipping_option_id'] ?? null,
@@ -133,6 +104,42 @@ class CheckoutService
         $totals = $this->calculateTotals($cart->items, $deliveryFee, $coupon);
 
         return DB::transaction(function () use ($user, $data, $saveAddress, $cart, $totals, $deliveryFee, $coupon) {
+            foreach ($cart->items as $item) {
+                $product = $item->product->fresh();
+                $variant = $item->product_variant_id
+                    ? ProductVariant::query()
+                        ->whereKey($item->product_variant_id)
+                        ->lockForUpdate()
+                        ->first()
+                    : null;
+
+                if (! $variant) {
+                    throw ValidationException::withMessages([
+                        'cart' => "{$product->name} is missing a size or color. Please update your cart.",
+                    ]);
+                }
+
+                if (! $product->isActive() || ! $variant->is_active) {
+                    throw ValidationException::withMessages([
+                        'cart' => "{$product->name} ({$variant->displayLabel()}) is no longer available.",
+                    ]);
+                }
+
+                $available = $this->stock->sellableQuantity($variant);
+
+                if ($available <= 0) {
+                    throw ValidationException::withMessages([
+                        'cart' => "{$product->name} ({$variant->displayLabel()}) is out of stock.",
+                    ]);
+                }
+
+                if ($item->quantity > $available) {
+                    throw ValidationException::withMessages([
+                        'cart' => "Only {$available} of {$product->name} ({$variant->displayLabel()}) available in stock.",
+                    ]);
+                }
+            }
+
             $region = isset($data['shipping_region_id'])
                 ? ShippingRegion::query()->find($data['shipping_region_id'])
                 : null;

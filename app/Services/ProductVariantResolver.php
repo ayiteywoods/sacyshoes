@@ -84,7 +84,7 @@ class ProductVariantResolver
         return $product->variants()
             ->where('is_active', true)
             ->get()
-            ->filter(fn (ProductVariant $variant) => $variant->quantity > 0)
+            ->filter(fn (ProductVariant $variant) => $variant->availableQuantity() > 0)
             ->filter(function (ProductVariant $variant) use ($normalizedSize, $requiresSize) {
                 if (! $requiresSize) {
                     return true;

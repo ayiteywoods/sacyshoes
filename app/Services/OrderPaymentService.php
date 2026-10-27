@@ -51,14 +51,23 @@ class OrderPaymentService
             $order->loadMissing('items');
 
             try {
-                $this->stock->fulfillOrderItems($order->items);
+                $fullyFulfilled = $this->stock->fulfillOrderItems($order->items, allowPartial: true);
             } catch (InsufficientStockException $exception) {
-                $stockUnavailable = true;
+                $fullyFulfilled = false;
 
                 Log::warning('Payment received but stock unavailable; order marked paid for manual fulfillment.', [
                     'order_id' => $order->id,
                     'payment_id' => $payment->id,
                     'message' => $exception->getMessage(),
+                ]);
+            }
+
+            if (! $fullyFulfilled) {
+                $stockUnavailable = true;
+
+                Log::warning('Payment received but stock was short; remaining units were taken and the rest needs manual fulfillment.', [
+                    'order_id' => $order->id,
+                    'payment_id' => $payment->id,
                 ]);
             }
 

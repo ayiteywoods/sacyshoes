@@ -40,12 +40,12 @@ class ProductVariant extends Model
 
     public function isInStock(): bool
     {
-        return $this->is_active && (int) $this->quantity > 0;
+        return $this->is_active && $this->availableQuantity() > 0;
     }
 
     public function availableQuantity(): int
     {
-        return max(0, (int) $this->quantity);
+        return app(\App\Services\StockReservationService::class)->sellableQuantity($this);
     }
 
     public function displayLabel(): string
