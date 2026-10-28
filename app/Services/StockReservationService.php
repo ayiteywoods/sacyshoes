@@ -155,11 +155,14 @@ class StockReservationService
      */
     protected function pendingOrderItemsQuery(?int $exceptOrderId = null): Builder
     {
+        $holdMinutes = max(1, (int) config('shop.stock_hold_minutes', 30));
+
         return OrderItem::query()
-            ->whereHas('order', function ($orderQuery) use ($exceptOrderId) {
+            ->whereHas('order', function ($orderQuery) use ($exceptOrderId, $holdMinutes) {
                 $orderQuery
                     ->where('payment_status', PaymentStatus::Pending)
-                    ->where('status', OrderStatus::PendingPayment);
+                    ->where('status', OrderStatus::PendingPayment)
+                    ->where('created_at', '>=', now()->subMinutes($holdMinutes));
 
                 if ($exceptOrderId) {
                     $orderQuery->where('id', '!=', $exceptOrderId);

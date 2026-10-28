@@ -27,6 +27,10 @@ return [
 
     'order_payment_timeout_hours' => (int) env('SHOP_ORDER_PAYMENT_TIMEOUT_HOURS', 24),
 
+    // Unpaid checkouts only hide stock for this long. After that, leftover sizes
+    // can be sold again. Late payments still succeed if units remain.
+    'stock_hold_minutes' => (int) env('SHOP_STOCK_HOLD_MINUTES', 30),
+
     'store_name' => env('SHOP_STORE_NAME', "Sacy's"),
 
     'contact_email' => env('SHOP_CONTACT_EMAIL', 'hello@sacyshoes.com'),

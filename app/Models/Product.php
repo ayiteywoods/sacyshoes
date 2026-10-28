@@ -136,15 +136,12 @@ class Product extends Model
             return false;
         }
 
-        if ($this->relationLoaded('variants')) {
-            return $this->variants->contains(fn (ProductVariant $variant) => $variant->isInStock());
-        }
+        $this->loadMissing('variants');
 
-        if ($this->variants()->exists()) {
-            return $this->variants()
-                ->where('is_active', true)
-                ->where('quantity', '>', 0)
-                ->exists();
+        if ($this->variants->isNotEmpty()) {
+            return $this->variants->contains(
+                fn (ProductVariant $variant) => $variant->is_active && $variant->availableQuantity() > 0
+            );
         }
 
         return $this->quantity > 0;

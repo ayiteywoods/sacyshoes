@@ -39,6 +39,16 @@ class StockReservationServiceTest extends TestCase
         $this->assertSame(0, app(StockReservationService::class)->sellableQuantity($variant->fresh()));
     }
 
+    public function test_abandoned_unpaid_orders_stop_hiding_stock_after_the_hold_window(): void
+    {
+        $variant = $this->makeVariant(quantity: 2);
+        $order = $this->makePendingOrder($variant, quantity: 2);
+        $order->forceFill(['created_at' => now()->subHours(2)])->save();
+
+        $this->assertSame(2, app(StockReservationService::class)->sellableQuantity($variant->fresh()));
+        $this->assertTrue($variant->product->fresh()->isInStock());
+    }
+
     public function test_payment_fulfillment_decrements_on_hand_stock(): void
     {
         $variant = $this->makeVariant(quantity: 3);
