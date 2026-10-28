@@ -104,6 +104,8 @@ class CheckoutService
         $totals = $this->calculateTotals($cart->items, $deliveryFee, $coupon);
 
         return DB::transaction(function () use ($user, $data, $saveAddress, $cart, $totals, $deliveryFee, $coupon) {
+            $this->stock->releaseExpiredReservations();
+
             foreach ($cart->items as $item) {
                 $product = $item->product->fresh();
                 $variant = $item->product_variant_id
@@ -125,7 +127,7 @@ class CheckoutService
                     ]);
                 }
 
-                $available = $this->stock->sellableQuantity($variant);
+                $available = max(0, (int) $variant->quantity);
 
                 if ($available <= 0) {
                     throw ValidationException::withMessages([
@@ -206,7 +208,10 @@ class CheckoutService
                 $this->coupons->clearSession();
             }
 
-            return $order->load('items');
+            $order->load('items');
+            $this->stock->reserveOrder($order);
+
+            return $order;
         });
     }
 

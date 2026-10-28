@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\InsufficientStockException;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\OrderPaymentService;
 use App\Services\PaystackPaymentReconciliationService;
 use App\Services\PaystackService;
+use App\Services\StockReservationService;
 use App\Support\GuestOrderAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,12 @@ class PaystackController extends Controller
                 ->with('success', 'This order has already been paid.');
         }
 
+        if ($order->payment_status === PaymentStatus::Refunded) {
+            return redirect()
+                ->route('checkout.success', $order)
+                ->with('error', 'This item has already been sold. Payment cannot go through.');
+        }
+
         if ($order->status === OrderStatus::Cancelled) {
             if ($this->reconciliation->reconcileOrder($order)) {
                 return redirect()
@@ -41,6 +49,37 @@ class PaystackController extends Controller
                     ->with('success', 'Payment confirmed. Thank you!');
             }
 
+            $order->refresh();
+
+            if ($order->payment_status === PaymentStatus::Refunded) {
+                return redirect()
+                    ->route('checkout.success', $order)
+                    ->with('error', 'This item has already been sold. Payment cannot go through.');
+            }
+        }
+
+        try {
+            app(StockReservationService::class)->ensureOrderStockForPayment($order);
+        } catch (InsufficientStockException) {
+            $order->update([
+                'status' => OrderStatus::Cancelled,
+                'payment_status' => PaymentStatus::Failed,
+            ]);
+
+            if ($order->payment) {
+                $order->payment->update([
+                    'metadata' => array_merge($order->payment->metadata ?? [], [
+                        'stock_unavailable' => true,
+                    ]),
+                ]);
+            }
+
+            return redirect()
+                ->route('checkout.success', $order)
+                ->with('error', 'This item has already been sold. Payment cannot go through.');
+        }
+
+        if ($order->status === OrderStatus::Cancelled) {
             $order->update([
                 'status' => OrderStatus::PendingPayment,
                 'payment_status' => PaymentStatus::Pending,
@@ -150,7 +189,7 @@ class PaystackController extends Controller
 
         if (($data['status'] ?? null) === 'success') {
             $result = $this->reconciliation->applySuccessfulPaystackPayment($order, $payment, $data);
-            $order->refresh();
+            $order->refresh()->load('payment');
 
             if (! $result['reconciled']) {
                 Log::error('Paystack callback payment verified but order not marked paid.', [
@@ -160,13 +199,18 @@ class PaystackController extends Controller
                 ]);
             }
 
+            $soldOut = $order->payment_status === PaymentStatus::Refunded
+                || data_get($order->payment?->metadata, 'stock_unavailable');
+
             return redirect()
                 ->route('checkout.success', $order)
                 ->with(
                     $order->payment_status === PaymentStatus::Paid ? 'success' : 'error',
                     $order->payment_status === PaymentStatus::Paid
                         ? 'Payment confirmed. Thank you!'
-                        : 'Payment received. We are finalizing your order — please refresh shortly.'
+                        : ($soldOut
+                            ? 'This item has already been sold. Payment did not go through. If you were charged, the money will be refunded.'
+                            : 'Payment received. We are finalizing your order — please refresh shortly.')
                 );
         }
 

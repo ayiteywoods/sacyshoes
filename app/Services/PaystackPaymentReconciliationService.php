@@ -177,6 +177,10 @@ class PaystackPaymentReconciliationService
             return ['reconciled' => true, 'reason' => 'verified with Paystack'];
         }
 
+        if ($order->payment_status === PaymentStatus::Refunded && data_get($payment->fresh()->metadata, 'stock_unavailable')) {
+            return ['reconciled' => true, 'reason' => 'item already sold, payment refunded'];
+        }
+
         Log::error('Paystack payment verified but order still unpaid.', [
             'order_id' => $order->id,
             'order_number' => $order->order_number,

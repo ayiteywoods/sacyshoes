@@ -235,6 +235,7 @@ class CartService
             ]);
         }
 
+        $this->stock->releaseExpiredReservations();
         $available = $this->stock->sellableQuantity($variant);
 
         if ($available <= 0) {

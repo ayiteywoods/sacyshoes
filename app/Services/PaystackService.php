@@ -92,6 +92,26 @@ class PaystackService
         return (array) $response->json('data', []);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function refund(string $reference, string $reason = 'Item already sold'): array
+    {
+        $response = $this->client()->post('/refund', [
+            'transaction' => $reference,
+            'merchant_note' => $reason,
+            'customer_note' => $reason,
+        ]);
+
+        if (! $response->successful() || ! $response->json('status')) {
+            throw ValidationException::withMessages([
+                'paystack' => $response->json('message') ?? 'Unable to refund Paystack transaction.',
+            ]);
+        }
+
+        return (array) $response->json('data', []);
+    }
+
     public function computeWebhookSignature(string $payload): string
     {
         $secret = (string) $this->secretKey();

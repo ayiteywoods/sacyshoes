@@ -15,7 +15,9 @@
             <h1 class="section-title mt-2">Thank You For Your Order</h1>
             <p class="mt-3 text-brand-muted">
                 Order <span class="font-medium text-brand-black">{{ $order->order_number }}</span>
-                @if ($order->status === \App\Enums\OrderStatus::Cancelled)
+                @if ($order->status === \App\Enums\OrderStatus::Cancelled && data_get($order->payment?->metadata, 'stock_unavailable'))
+                    could not be completed because this item has already been sold.
+                @elseif ($order->status === \App\Enums\OrderStatus::Cancelled)
                     was cancelled because payment was not received in time.
                 @elseif ($order->payment_status->value === 'paid')
                     is confirmed. We are preparing it for delivery.
@@ -113,7 +115,11 @@
         </div>
 
         <div class="mt-8 space-y-4">
-            @if ($order->status === \App\Enums\OrderStatus::Cancelled)
+            @if ($order->status === \App\Enums\OrderStatus::Cancelled && data_get($order->payment?->metadata, 'stock_unavailable'))
+                <div class="rounded border border-neutral-200 bg-neutral-50 px-4 py-3 text-center text-sm text-brand-muted">
+                    This item has already been sold. Payment did not go through. If you were charged, the money will be refunded.
+                </div>
+            @elseif ($order->status === \App\Enums\OrderStatus::Cancelled)
                 <div class="rounded border border-neutral-200 bg-neutral-50 px-4 py-3 text-center text-sm text-brand-muted">
                     This order was cancelled because payment was not received in time.
                 </div>

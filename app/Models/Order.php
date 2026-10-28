@@ -45,6 +45,7 @@ class Order extends Model
         'shipping_fee',
         'paid_at',
         'payment_due_at',
+        'stock_reserved',
     ];
 
     protected function casts(): array
@@ -60,6 +61,7 @@ class Order extends Model
             'payment_status' => PaymentStatus::class,
             'paid_at' => 'datetime',
             'payment_due_at' => 'datetime',
+            'stock_reserved' => 'boolean',
             'user_id' => 'integer',
         ];
     }

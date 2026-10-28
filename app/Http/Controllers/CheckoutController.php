@@ -145,7 +145,7 @@ class CheckoutController extends Controller
             $order->refresh();
         }
 
-        $order->load('items');
+        $order->load(['items', 'payment']);
 
         return view('storefront.checkout.success', compact('order'));
     }

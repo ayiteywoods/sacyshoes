@@ -16,7 +16,8 @@ class OrderPaymentService
 {
     public function __construct(
         protected OrderNotificationService $notifications,
-        protected StockReservationService $stock
+        protected StockReservationService $stock,
+        protected PaystackService $paystack,
     ) {}
 
     public function markAsPaid(Order $order, Payment $payment, array $data = []): void
@@ -51,24 +52,19 @@ class OrderPaymentService
             $order->loadMissing('items');
 
             try {
-                $fullyFulfilled = $this->stock->fulfillOrderItems($order->items, allowPartial: true);
+                $this->stock->fulfillPaidOrder($order, allowPartial: false);
             } catch (InsufficientStockException $exception) {
-                $fullyFulfilled = false;
+                $stockUnavailable = true;
 
-                Log::warning('Payment received but stock unavailable; order marked paid for manual fulfillment.', [
+                $this->rejectSoldOutOrder($order, $payment, $data, $exception->getMessage());
+
+                Log::warning('Payment blocked because this item was already sold.', [
                     'order_id' => $order->id,
                     'payment_id' => $payment->id,
                     'message' => $exception->getMessage(),
                 ]);
-            }
 
-            if (! $fullyFulfilled) {
-                $stockUnavailable = true;
-
-                Log::warning('Payment received but stock was short; remaining units were taken and the rest needs manual fulfillment.', [
-                    'order_id' => $order->id,
-                    'payment_id' => $payment->id,
-                ]);
+                return;
             }
 
             $paidAt = isset($data['paid_at'])
@@ -87,11 +83,6 @@ class OrderPaymentService
                 'verification' => $data,
                 'display_reference' => $displayReference,
             ]);
-
-            if ($stockUnavailable) {
-                $paymentMetadata['stock_warning'] = true;
-                $paymentMetadata['stock_warning_message'] = 'Stock was unavailable when payment was confirmed. Fulfill manually.';
-            }
 
             // Avoid observers/mail during the payment transaction so a notification
             // failure cannot roll back a successful Paystack charge.
@@ -126,6 +117,12 @@ class OrderPaymentService
 
         $order->refresh();
         $payment->refresh();
+
+        if ($stockUnavailable) {
+            $this->refundSoldOutPayment($payment);
+
+            return;
+        }
 
         if ($order->payment_status !== PaymentStatus::Paid) {
             Log::error('markAsPaid finished but order is still unpaid.', [
@@ -162,6 +159,64 @@ class OrderPaymentService
             Log::warning('Admin notification sync failed after payment.', [
                 'order_id' => $order->id,
                 'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    protected function rejectSoldOutOrder(Order $order, Payment $payment, array $data, string $message): void
+    {
+        $paymentMetadata = array_merge($payment->metadata ?? [], [
+            'verification' => $data,
+            'stock_unavailable' => true,
+            'stock_unavailable_message' => 'This item was already sold to another customer. Payment did not go through.',
+            'stock_unavailable_detail' => $message,
+        ]);
+
+        Order::withoutEvents(function () use ($order, $payment, $data, $paymentMetadata) {
+            $payment->update([
+                'status' => PaymentStatus::Refunded,
+                'channel' => $data['channel'] ?? data_get($data, 'authorization.channel') ?? $payment->channel,
+                'metadata' => $paymentMetadata,
+            ]);
+
+            $order->update([
+                'payment_status' => PaymentStatus::Refunded,
+                'status' => OrderStatus::Cancelled,
+                'stock_reserved' => false,
+            ]);
+        });
+    }
+
+    protected function refundSoldOutPayment(Payment $payment): void
+    {
+        if ($payment->provider !== 'paystack' || blank($payment->reference)) {
+            return;
+        }
+
+        try {
+            $refund = $this->paystack->refund(
+                (string) $payment->reference,
+                'Item already sold to another customer.',
+            );
+
+            $payment->update([
+                'metadata' => array_merge($payment->metadata ?? [], [
+                    'stock_unavailable_refund' => $refund,
+                    'stock_unavailable_refunded_at' => now()->toIso8601String(),
+                ]),
+            ]);
+        } catch (Throwable $exception) {
+            Log::error('Paystack refund failed after sold-out payment was blocked.', [
+                'payment_id' => $payment->id,
+                'reference' => $payment->reference,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $payment->update([
+                'metadata' => array_merge($payment->metadata ?? [], [
+                    'stock_unavailable_refund_failed' => true,
+                    'stock_unavailable_refund_error' => $exception->getMessage(),
+                ]),
             ]);
         }
     }

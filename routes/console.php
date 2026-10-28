@@ -9,4 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('orders:reconcile-paystack')->everyMinute();
+Schedule::command('orders:release-expired-holds')->everyMinute();
 Schedule::command('orders:cancel-unpaid')->everyFiveMinutes();

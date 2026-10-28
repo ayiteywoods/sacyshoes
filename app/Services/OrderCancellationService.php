@@ -24,6 +24,8 @@ class OrderCancellationService
         }
 
         DB::transaction(function () use ($order) {
+            app(StockReservationService::class)->releaseOrder($order);
+
             $order->update([
                 'status' => OrderStatus::Cancelled,
                 'payment_status' => PaymentStatus::Failed,

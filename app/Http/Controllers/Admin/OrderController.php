@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Services\AdminNotificationService;
 use App\Services\OrderPaymentService;
 use App\Services\PaystackPaymentReconciliationService;
+use App\Services\StockReservationService;
 use App\Support\AdminTable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -121,7 +122,17 @@ class OrderController extends Controller
                 ],
             ]);
 
+            $order->refresh();
+
+            if ($order->payment_status !== PaymentStatus::Paid) {
+                return back()->with('error', 'This item has already been sold. Payment was not recorded.');
+            }
+
             return back()->with('success', 'Order marked as paid and payment status updated.');
+        }
+
+        if ($newStatus === OrderStatus::Cancelled) {
+            app(StockReservationService::class)->releaseOrder($order);
         }
 
         if ($newStatus === OrderStatus::Refunded) {
@@ -193,6 +204,10 @@ class OrderController extends Controller
 
     public function destroy(Order $order): RedirectResponse
     {
+        if ($order->payment_status !== PaymentStatus::Paid) {
+            app(StockReservationService::class)->releaseOrder($order);
+        }
+
         $order->delete();
 
         app(AdminNotificationService::class)->sync();
